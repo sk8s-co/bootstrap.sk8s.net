@@ -1,6 +1,5 @@
 import { marked } from 'marked';
 import readmeContent from '../README.md';
-import contributingContent from '../CONTRIBUTING.md';
 import githubMarkdownCss from './github-markdown.css';
 
 // Load markdown content once at startup
@@ -66,11 +65,4 @@ const generateHtml = (markdownContent: string, title: string): string => {
 
 export const generateReadmeHtml = (): string => {
   return generateHtml(readmeContent, 'SK8S Bootstrap Service');
-};
-
-export const generateContributingHtml = (): string => {
-  return generateHtml(
-    contributingContent,
-    'Contributing - SK8S Bootstrap Service',
-  );
 };

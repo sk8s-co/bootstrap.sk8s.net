@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import accepts from 'accepts';
 import { generateKubeletScript } from './kubelet';
-import { generateReadmeHtml, generateContributingHtml } from './static';
+import { generateReadmeHtml } from './static';
 import { isBrowser } from './utils';
 
 /**
@@ -9,13 +9,6 @@ import { isBrowser } from './utils';
  */
 export const router = () => {
   const r = Router();
-
-  // Serve CONTRIBUTING.md as HTML
-  r.get('/CONTRIBUTING.md', (_req: Request, res: Response) => {
-    const html = generateContributingHtml();
-    res.setHeader('Content-Type', 'text/html');
-    res.send(html);
-  });
 
   r.get('/', (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -41,7 +34,7 @@ export const router = () => {
 
       // Guard: Return JSON response early for non-shellscript requests
       if (acceptedType === 'application/json') {
-        res.json({ message: 'Hello from Express + TypeScript!' });
+        res.json({ message: 'sk8s.net bootstrap service' });
         return;
       }
 

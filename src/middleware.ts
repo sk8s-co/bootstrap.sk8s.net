@@ -24,12 +24,6 @@ const errorTemplate = Handlebars.compile<ErrorData>(errorTemplateSource);
 export const sanitized = () => {
   return (req: Request, _res: Response, next: NextFunction) => {
     try {
-      // Skip sanitization for documentation paths
-      if (req.path === '/CONTRIBUTING.md') {
-        next();
-        return;
-      }
-
       // Skip sanitization for browser requests
       const userAgentHeader = req.get('User-Agent');
       if (isBrowser(userAgentHeader)) {

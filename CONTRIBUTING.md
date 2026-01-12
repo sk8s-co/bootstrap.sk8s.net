@@ -324,9 +324,8 @@ Examples:
 
 ## Need Help?
 
-- 📖 Read [CLAUDE.md](CLAUDE.md) for architectural context
+- 📖 Read [CLAUDE.md](https://github.com/sk8s-co/bootstrap.sk8s.net/blob/main/CLAUDE.md) for architectural context
 - 🐛 [Open an issue](https://github.com/sk8s-co/bootstrap.sk8s.net/issues)
-- 💬 Discuss in [GitHub Discussions](https://github.com/sk8s-co/bootstrap.sk8s.net/discussions)
 
 ## License
 

@@ -103,11 +103,11 @@ All injection attempts are automatically rejected with clear error messages.
 
 Functional Source License, Version 1.1, Apache 2.0 Future License (FSL-1.1-ALv2)
 
-See [LICENSE](LICENSE) for details.
+See [LICENSE](https://github.com/sk8s-co/bootstrap.sk8s.net/blob/main/LICENSE) for details.
 
 ## Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+Contributions are welcome! See [CONTRIBUTING.md](https://github.com/sk8s-co/bootstrap.sk8s.net/blob/main/CONTRIBUTING.md) for development setup and guidelines.
 
 ## Links
 
