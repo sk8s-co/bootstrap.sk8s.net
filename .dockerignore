@@ -4,6 +4,7 @@ coverage
 npm-debug.log
 yarn-error.log
 .git
+.github
 .gitignore
 .env
 .DS_Store
