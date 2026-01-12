@@ -1,0 +1,16 @@
+#!/bin/bash
+set -Eeuo pipefail
+exec >&2
+
+# SK8S Kubelet Bootstrap Script
+# Generated on: {{timestamp}}
+
+echo "=== SK8S Kubelet Bootstrap ==="
+echo "    Machine ID: {{machineId}}"
+echo "    Component: {{component}}"
+echo "    Version: {{version}}"
+echo ""
+
+export {{uppercase component}}_BOOTSTRAPPED="true"
+export {{uppercase component}}_BOOTSTRAPPED_BY="sk8s.net"
+export {{uppercase component}}_BOOTSTRAPPED_AT="{{timestamp}}"

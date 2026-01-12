@@ -1,0 +1,53 @@
+{
+  "name": "bootstrap.sk8s.net",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:sk8s-co/bootstrap.sk8s.net.git",
+  "author": "SK8S <https://github.com/sk8s-co>",
+  "license": "FSL-1.1-ALv2",
+  "scripts": {
+    "dev": "tsup --watch --onSuccess \"node dist/index.js\"",
+    "build": "tsup",
+    "start": "yarn build && node dist/index.js",
+    "lint": "eslint 'src/**/*.ts'",
+    "lint:fix": "eslint 'src/**/*.ts' --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest --testPathPattern=src",
+    "test:integration": "jest --testPathPattern=tests"
+  },
+  "dependencies": {
+    "accepts": "^1.3.8",
+    "express": "^5.2.1",
+    "github-markdown-css": "^5.8.1",
+    "handlebars": "^4.7.8",
+    "marked": "^17.0.1",
+    "ua-parser-js": "^2.0.7"
+  },
+  "devDependencies": {
+    "@types/accepts": "^1.3.7",
+    "@types/express": "^5.0.6",
+    "@types/handlebars": "^4.1.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.0.6",
+    "@types/supertest": "^6.0.3",
+    "@types/ua-parser-js": "^0.7.39",
+    "@typescript-eslint/eslint-plugin": "^8.52.0",
+    "@typescript-eslint/parser": "^8.52.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^17.0.0",
+    "jest": "^30.2.0",
+    "nodemon": "^3.1.11",
+    "prettier": "^3.7.4",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.6",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
+  }
+}
