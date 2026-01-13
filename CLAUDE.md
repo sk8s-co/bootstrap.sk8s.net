@@ -4,7 +4,47 @@ This project was built collaboratively with Claude (Anthropic's AI assistant). T
 
 ## Project Overview
 
-**SK8S Bootstrap Service** - A secure, type-safe bootstrap service for Serverless Kubernetes components. The service generates dynamic bootstrap scripts for Kubernetes components (kubelet, controller-manager, scheduler, cri-dockerd, kube-proxy) with built-in security features and content negotiation.
+**SK8S Bootstrap Service** (discovery.sk8s.net) - A secure, type-safe bootstrap service for Serverless Kubernetes components. The service generates dynamic bootstrap scripts for Kubernetes components (kubelet, controller-manager, scheduler, cri-dockerd, kube-proxy) with built-in security features and content negotiation.
+
+### The Bigger Picture: Serverless Kubernetes
+
+This service is part of the **SK8S (Serverless Kubernetes)** ecosystem, which aims to run Kubernetes nodes in containerized, serverless environments. The key innovation is that traditional Kubernetes nodes require persistent infrastructure, but SK8S enables ephemeral, on-demand Kubernetes nodes that can be spun up in containers.
+
+**Related Repository**: [sk8s-co/node](https://github.com/sk8s-co/node) - A pre-built Kubelet container that includes:
+- Kubernetes 1.34 kubelet
+- CRI-Dockerd 0.3.21 (container runtime interface)
+- CNI plugins (container networking)
+- Bootstrap tooling
+
+### How the Bootstrap Process Works
+
+1. **Node Startup**: When an SK8S node container starts, it runs `/bin/_initialize`
+2. **Discovery Call**: The initialization script makes an HTTP request to `https://bootstrap.sk8s.net` (this service):
+   ```bash
+   curl https://bootstrap.sk8s.net \
+     -H "Accept: text/x-shellscript" \
+     -H "User-Agent: dockerd-kubelet/v1.28.0" \
+     -H "X-Machine-ID: node-abc123" \
+     -H "X-Machine-Token: <optional-auth-token>" \
+     -H "X-Debug: true"  # optional
+   ```
+3. **Bootstrap Script Generation**: Our service dynamically generates a bash script that:
+   - Exports environment variables (`KUBELET_FLAGS`, `CRI_DOCKERD_FLAGS`)
+   - Generates a machine-specific kubelet configuration file (`/etc/kubernetes/kubelet/{machineId}.yaml`)
+   - Creates a symlink from `${KUBELET_CONFIG}` to the machine-specific file
+   - Sets bootstrap metadata environment variables
+4. **Execution**: The node sources the returned script, configuring itself
+5. **Startup**: The node starts kubelet and cri-dockerd in parallel using `concurrently`
+6. **Fallback**: If the bootstrap service is unavailable, the node falls back to `/bin/_standalone` with a static `standalone.yaml` configuration
+
+### Why Dynamic Bootstrap?
+
+Instead of baking configuration into container images:
+- **Machine Identity**: Each node gets a unique configuration file named after its machine ID
+- **Centralized Management**: Configuration can be updated without rebuilding containers
+- **Observability**: Bootstrap service can track which nodes have bootstrapped and when
+- **Flexibility**: Different nodes can receive different configurations based on headers
+- **Security**: Machine tokens can enable authentication and authorization
 
 ## Development Timeline
 
@@ -47,11 +87,28 @@ This project was built collaboratively with Claude (Anthropic's AI assistant). T
    - Files bundled into compiled output, no runtime file reads
 
 6. **Testing Strategy**
-   - 51 tests total (31 unit, 20 integration)
-   - 91.62% code coverage
-   - Tests cover: API endpoints, security validation, browser detection, error handling
+   - 64 tests total (32 unit, 32 integration)
+   - Comprehensive code coverage
+   - Tests cover: API endpoints, security validation, browser detection, error handling, debug mode, YAML generation
    - Integration tests use app factory for isolation
-   - Custom Jest transformer (tests/fileTransformer.cjs) handles .hbs/.md imports
+   - Custom Jest transformer (tests/fileTransformer.cjs) handles .hbs/.md/.yaml imports
+
+7. **Dynamic YAML Generation** (January 2026)
+   - Kubelet configuration generated dynamically from template (`kubelet.yaml`)
+   - YAML parsed with `js-yaml` library for validation at startup
+   - Machine-specific config files: `/etc/kubernetes/kubelet/{machineId}.yaml`
+   - Timestamp comment added to generated files: `# Generated at {ISO8601}`
+   - Symlink created from `${KUBELET_CONFIG}` to machine-specific file
+   - YAML bundled into output via tsup loader (`.yaml: 'text'`)
+   - Past-tense status messages for retroactive display (infos/warns/fatals)
+
+8. **Debug Mode** (January 2026)
+   - `X-Debug` header support (accepts: `true`, `1`, `yes`)
+   - Uses bash `set -x` for automatic command tracing in debug mode
+   - Debug header block includes: timestamp, component, version, machine ID, user-agent, token length
+   - Machine tokens redacted in debug output with length shown
+   - Verbose error output with stack traces when debug enabled
+   - Both script and JSON error responses support debug mode
 
 ## Architectural Decisions
 
@@ -99,16 +156,18 @@ express.json()
 **Rationale**: Templates should never handle null/undefined, eliminates edge cases.
 
 ### Asset Bundling Strategy
-All text assets (templates, markdown) imported as ES modules:
+All text assets (templates, markdown, YAML) imported as ES modules:
 
 ```typescript
 // Import as module (tsup handles the conversion)
 import templateSource from './templates/kubelet.sh.hbs';
 import readmeContent from '../README.md';
+import kubeletYamlSource from './templates/kubelet.yaml';
 
 // Use directly at runtime
 const template = Handlebars.compile(templateSource);
 const html = marked(readmeContent);
+const parsed = yaml.load(kubeletYamlSource);
 ```
 
 **Rationale**:
@@ -116,7 +175,8 @@ const html = marked(readmeContent);
 - Faster startup (no fs.readFileSync calls)
 - Works identically in all environments
 - Easier deployment (just copy dist/index.js)
-- tsup loader configuration: `{ '.hbs': 'text', '.md': 'text' }`
+- tsup loader configuration: `{ '.hbs': 'text', '.md': 'text', '.yaml': 'text' }`
+- Jest transformer handles same file types for testing
 
 ## Security Considerations
 
@@ -201,16 +261,16 @@ Multi-stage build:
 - Entry: `src/index.ts`
 - Target: Node 18
 - Format: CommonJS (for compatibility)
-- Loader: `{ '.hbs': 'text', '.md': 'text' }` - Bundles text files as string modules
+- Loader: `{ '.hbs': 'text', '.md': 'text', '.yaml': 'text' }` - Bundles text files as string modules
 
 ### jest.config.js
 - Preset: ts-jest
 - ESM transformation for marked library
-- Custom transformer for `.hbs` and `.md` files: `tests/fileTransformer.cjs`
+- Custom transformer for `.hbs`, `.md`, and `.yaml` files: `tests/fileTransformer.cjs`
 - Coverage thresholds not enforced (informational)
 
 ### tests/fileTransformer.cjs
-- Jest transformer that reads `.hbs` and `.md` files
+- Jest transformer that reads `.hbs`, `.md`, and `.yaml` files
 - Returns file content as CommonJS module string export
 - Enables Jest to handle the same imports that tsup processes
 - Uses `.cjs` extension to explicitly mark as CommonJS
@@ -297,12 +357,16 @@ Multi-stage build:
 5. **README Generation** - Switched from static HTML to dynamic Markdown rendering
 6. **Asset Bundling** - Converted from runtime file reads to compile-time bundling
 7. **Documentation Split** - Separated README (users) from CONTRIBUTING (developers)
+8. **Dynamic YAML Generation** (Jan 2026) - Replaced static file copy with templated YAML generation
+9. **Debug Mode with set -x** (Jan 2026) - Replaced manual echo statements with bash trace mode
+10. **Past-Tense Messaging** (Jan 2026) - Changed status messages to past tense for retroactive display
 
 ### Testing Approach Evolution
 - Initially: Manual curl testing
 - Added: Unit tests for utilities
 - Expanded: Integration tests for full API
-- Achieved: 91.62% coverage with meaningful tests
+- Added: Debug mode and YAML generation tests
+- Achieved: 64 tests with comprehensive coverage
 
 ## Code Quality Tools
 
@@ -324,11 +388,12 @@ Multi-stage build:
 ## Performance Considerations
 
 ### Asset Loading
-- All assets bundled at compile time (templates, markdown files)
+- All assets bundled at compile time (templates, markdown files, YAML configurations)
 - No file I/O at runtime (no fs.readFileSync calls)
 - Templates compiled once at startup (not per-request)
+- YAML parsed and validated once at startup with js-yaml
 - Marked parsing happens per-request (fast enough for this use case)
-- Bundle size: ~25KB (includes all templates and documentation)
+- Bundle size: ~48KB (includes all templates, documentation, and configurations)
 
 ### Docker Image Size
 - Multi-stage build reduces final image size
@@ -355,6 +420,74 @@ If you're extending this project, consider:
 3. **Should we support YAML output?** Currently only bash/JSON
 4. **Should scripts be versioned?** Currently only one version per component
 5. **Should we support custom scripts?** Currently template-based only
+6. **Should we support multi-cluster configurations?** Currently assumes single cluster
+
+## Recent Development (January 2026)
+
+### Dynamic kubelet.yaml Generation
+
+**Problem**: The original implementation copied a static `standalone.yaml` file, which didn't allow for per-node customization or tracking when configurations were generated.
+
+**Solution**: Implemented dynamic YAML generation from a template with the following features:
+- Template file (`kubelet.yaml`) imported and bundled at compile time
+- YAML validated with `js-yaml` library at startup
+- Machine-specific config files generated: `/etc/kubernetes/kubelet/{machineId}.yaml`
+- Timestamp comment added to track generation time: `# Generated at 2026-01-13T15:11:52.657Z`
+- Symlink created from `${KUBELET_CONFIG}` to machine-specific file
+- Past-tense status messages for retroactive display in node logs
+
+**Benefits**:
+- Each node has a unique, identifiable configuration file
+- Troubleshooting easier with timestamps and machine IDs
+- Centralized template management (no need to rebuild containers)
+- Foundation for future per-node configuration customization
+
+### Debug Mode Implementation
+
+**Problem**: Debugging bootstrap failures required manually adding echo statements and rebuilding the service.
+
+**Solution**: Implemented `X-Debug` header support with intelligent debug output:
+- Bash `set -x` for automatic command tracing (shows actual execution, not manual echoes)
+- Debug header block with bootstrap metadata (timestamp, component, version, machine ID, user-agent)
+- Machine tokens redacted with length shown for security
+- Stack traces included in error responses when debug enabled
+- Works for both shellscript and JSON response formats
+
+**Benefits**:
+- On-demand debugging without code changes
+- No duplicate output (bash trace shows execution directly)
+- Security-conscious (tokens redacted)
+- Better troubleshooting for node operators
+
+### Technical Improvements
+
+1. **TypeScript Module Declarations**: Created `src/types/modules.d.ts` for `.yaml` file imports
+2. **Build Configuration**: Added `.yaml` loader to both tsup and Jest transformer
+3. **Test Coverage**: Maintained 64 passing tests with YAML generation and debug mode coverage
+4. **Bundle Size**: Increased to ~48KB (from ~25KB) due to YAML configurations
+5. **Dependencies**: Added `js-yaml` and `@types/js-yaml` for YAML processing
+
+### Integration with sk8s-co/node
+
+The generated bootstrap scripts are designed to work seamlessly with the [sk8s-co/node](https://github.com/sk8s-co/node) container:
+
+**Node Bootstrap Flow**:
+1. Container starts → `/bin/start` → `/bin/_initialize`
+2. `_initialize` checks if already bootstrapped (config file exists)
+3. If not bootstrapped, fetches script from `https://bootstrap.sk8s.net` with headers
+4. Sources the returned script which generates kubelet.yaml and sets environment variables
+5. Displays infos/warns/fatals from bootstrap process
+6. Falls back to `/bin/_standalone` if service unavailable
+7. Starts kubelet and cri-dockerd in parallel
+
+**Environment Variables Set**:
+- `KUBELET_FLAGS`: Configuration path, root dir, cert dir, cluster domain/DNS
+- `CRI_DOCKERD_FLAGS`: Runtime endpoint, root directory, network plugin, hairpin mode
+- `{COMPONENT}_BOOTSTRAPPED`: Set to "true" after successful bootstrap
+- `{COMPONENT}_BOOTSTRAPPED_BY`: Identifies bootstrap service ("sk8s.net")
+- `{COMPONENT}_BOOTSTRAPPED_AT`: ISO8601 timestamp of bootstrap
+
+This design enables stateless, ephemeral Kubernetes nodes that can be dynamically configured and tracked without persistent infrastructure or manual configuration management.
 
 ## Conclusion
 
