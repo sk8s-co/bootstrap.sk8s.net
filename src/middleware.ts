@@ -57,6 +57,8 @@ export const sanitized = () => {
       // Sanitize user-controlled fields
       const machineId = req.get('X-Machine-ID') || 'unknown';
       const version = parsedUA.version || 'latest';
+      const debugHeader = req.get('X-Debug') || '';
+      const debug = ['true', '1', 'yes'].includes(debugHeader.toLowerCase());
 
       req.sanitizedData = {
         component: parsedUA.component,
@@ -64,6 +66,7 @@ export const sanitized = () => {
         machineId: sanitizeForBash(machineId, 'Machine ID'),
         machineToken: req.get('X-Machine-Token') || undefined,
         version: sanitizeForBash(version, 'Version'),
+        debug,
       };
 
       next();

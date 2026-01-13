@@ -303,5 +303,124 @@ describe('Integration Tests', () => {
       expect(response1.text).toBeTruthy();
       expect(response2.text).toBeTruthy();
     });
+
+    it('should handle production curl format with all headers', async () => {
+      // Simulate the actual production curl command
+      const response = await request(app)
+        .get('/')
+        .set('Accept', 'text/x-shellscript')
+        .set(
+          'User-Agent',
+          'dockerd-kubelet/1.34 (cri-dockerd/0.3.21; crictl/1.33.0; cni/1.7.1; alpine; linux/arm64)',
+        )
+        .set('X-Machine-ID', 'prod-node-001')
+        .set('X-Machine-Token', 'token-abc123')
+        .set('X-Debug', 'true');
+
+      expect(response.status).toBe(200);
+      expect(response.headers['content-type']).toMatch(/text\/x-shellscript/);
+      expect(response.text).toContain('#!/usr/bin/env bash');
+      expect(response.text).toContain('export KUBELET_FLAGS=');
+      expect(response.text).toContain('export CRI_DOCKERD_FLAGS=');
+      expect(response.text).toContain('export DOCKERD_KUBELET_BOOTSTRAPPED="true"');
+      expect(response.text).toContain(
+        'export DOCKERD_KUBELET_BOOTSTRAPPED_BY="sk8s.net"',
+      );
+      expect(response.text).toContain('export DOCKERD_KUBELET_BOOTSTRAPPED_AT=');
+    });
+  });
+
+  describe('Debug mode', () => {
+    it('should include debug output when X-Debug is true', async () => {
+      const response = await request(app)
+        .get('/')
+        .set('Accept', 'text/x-shellscript')
+        .set('User-Agent', 'dockerd-kubelet/v1.28.0')
+        .set('X-Machine-ID', 'debug-test-node')
+        .set('X-Debug', 'true');
+
+      expect(response.status).toBe(200);
+      expect(response.text).toContain('# DEBUG MODE ENABLED');
+      expect(response.text).toContain('# Bootstrap Request Information:');
+      expect(response.text).toContain('#   Component:     dockerd-kubelet');
+      expect(response.text).toContain('#   Version:       v1.28.0');
+      expect(response.text).toContain('#   Machine ID:    debug-test-node');
+      expect(response.text).toContain('[DEBUG] SK8S Bootstrap Service - Debug Mode Enabled');
+      expect(response.text).toContain('[DEBUG] Component: dockerd-kubelet vv1.28.0');
+      expect(response.text).toContain('[DEBUG] Kubelet flags configured:');
+      expect(response.text).toContain('[DEBUG] CRI-Dockerd flags configured:');
+      expect(response.text).toContain('[DEBUG] Bootstrap completed successfully');
+    });
+
+    it('should accept X-Debug value of "1"', async () => {
+      const response = await request(app)
+        .get('/')
+        .set('Accept', 'text/x-shellscript')
+        .set('User-Agent', 'dockerd-kubelet/v1.28.0')
+        .set('X-Debug', '1');
+
+      expect(response.status).toBe(200);
+      expect(response.text).toContain('# DEBUG MODE ENABLED');
+    });
+
+    it('should accept X-Debug value of "yes"', async () => {
+      const response = await request(app)
+        .get('/')
+        .set('Accept', 'text/x-shellscript')
+        .set('User-Agent', 'dockerd-kubelet/v1.28.0')
+        .set('X-Debug', 'yes');
+
+      expect(response.status).toBe(200);
+      expect(response.text).toContain('# DEBUG MODE ENABLED');
+    });
+
+    it('should NOT include debug output when X-Debug is false', async () => {
+      const response = await request(app)
+        .get('/')
+        .set('Accept', 'text/x-shellscript')
+        .set('User-Agent', 'dockerd-kubelet/v1.28.0')
+        .set('X-Debug', 'false');
+
+      expect(response.status).toBe(200);
+      expect(response.text).not.toContain('# DEBUG MODE ENABLED');
+      expect(response.text).not.toContain('[DEBUG]');
+    });
+
+    it('should NOT include debug output when X-Debug is missing', async () => {
+      const response = await request(app)
+        .get('/')
+        .set('Accept', 'text/x-shellscript')
+        .set('User-Agent', 'dockerd-kubelet/v1.28.0');
+
+      expect(response.status).toBe(200);
+      expect(response.text).not.toContain('# DEBUG MODE ENABLED');
+      expect(response.text).not.toContain('[DEBUG]');
+    });
+
+    it('should redact machine token in debug output', async () => {
+      const response = await request(app)
+        .get('/')
+        .set('Accept', 'text/x-shellscript')
+        .set('User-Agent', 'dockerd-kubelet/v1.28.0')
+        .set('X-Machine-Token', 'secret-token-12345')
+        .set('X-Debug', 'true');
+
+      expect(response.status).toBe(200);
+      expect(response.text).toContain('# DEBUG MODE ENABLED');
+      expect(response.text).toContain('#   Machine Token: [REDACTED]');
+      expect(response.text).not.toContain('secret-token-12345');
+    });
+
+    it('should show machine token length in debug output', async () => {
+      const response = await request(app)
+        .get('/')
+        .set('Accept', 'text/x-shellscript')
+        .set('User-Agent', 'dockerd-kubelet/v1.28.0')
+        .set('X-Machine-Token', '12345')
+        .set('X-Debug', 'true');
+
+      expect(response.status).toBe(200);
+      expect(response.text).toContain('(length: 5)');
+    });
   });
 });

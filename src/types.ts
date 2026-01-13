@@ -7,6 +7,7 @@ export interface BaseScriptData {
   machineId: string;
   version: string;
   machineToken?: string;
+  debug: boolean;
 }
 
 export type KubeletData = BaseScriptData;
@@ -28,4 +29,5 @@ export interface SanitizedScriptData {
   machineId: string;
   version: string;
   machineToken?: string;
+  debug: boolean;
 }

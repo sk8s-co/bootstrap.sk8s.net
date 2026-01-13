@@ -2,6 +2,27 @@
 set -Eeuo pipefail
 exec >&2
 
+{{#if debug}}
+# =============================================================================
+# DEBUG MODE ENABLED
+# =============================================================================
+# Bootstrap Request Information:
+#   Timestamp:     {{timestamp}}
+#   Component:     {{component}}
+#   Version:       {{version}}
+#   Machine ID:    {{machineId}}
+#   User-Agent:    {{userAgent}}
+{{#if machineToken}}
+#   Machine Token: [REDACTED] (length: {{machineToken.length}})
+{{/if}}
+# =============================================================================
+echo "[DEBUG] SK8S Bootstrap Service - Debug Mode Enabled" >> infos
+echo "[DEBUG] Component: {{component}} v{{version}}" >> infos
+echo "[DEBUG] Machine ID: {{machineId}}" >> infos
+echo "[DEBUG] Timestamp: {{timestamp}}" >> infos
+echo "[DEBUG] User-Agent: {{userAgent}}" >> infos
+{{/if}}
+
 export KUBELET_FLAGS="\
 --config=${KUBELET_CONFIG} \
 --root-dir=/var/run/kube \
@@ -17,9 +38,34 @@ export CRI_DOCKERD_FLAGS="\
 --hairpin-mode=hairpin-veth \
 "
 
+{{#if debug}}
+echo "[DEBUG] Kubelet flags configured:" >> infos
+echo "[DEBUG]   KUBELET_CONFIG=${KUBELET_CONFIG}" >> infos
+echo "[DEBUG]   Root Dir: /var/run/kube" >> infos
+echo "[DEBUG]   Cert Dir: /var/run/kube/pki" >> infos
+echo "[DEBUG]   Cluster Domain: ${CLUSTER_DOMAIN}" >> infos
+echo "[DEBUG]   Cluster DNS: ${CLUSTER_DNS}" >> infos
+echo "[DEBUG] CRI-Dockerd flags configured:" >> infos
+echo "[DEBUG]   Endpoint: unix:///var/run/cri-dockerd.sock" >> infos
+echo "[DEBUG]   Root Dir: /var/run/kube/cri-dockerd" >> infos
+echo "[DEBUG]   Network Plugin: cni" >> infos
+echo "[DEBUG]   Hairpin Mode: hairpin-veth" >> infos
+{{/if}}
+
 echo "Activating standalone configuration: /etc/kubernetes/kubelet/standalone.yaml" >> infos
+{{#if debug}}
+echo "[DEBUG] Copying standalone configuration to ${KUBELET_CONFIG}" >> infos
+{{/if}}
 cp /etc/kubernetes/kubelet/standalone.yaml "${KUBELET_CONFIG}"
 
 export {{env component}}_BOOTSTRAPPED="true"
 export {{env component}}_BOOTSTRAPPED_BY="sk8s.net"
 export {{env component}}_BOOTSTRAPPED_AT="{{timestamp}}"
+
+{{#if debug}}
+echo "[DEBUG] Bootstrap environment variables set:" >> infos
+echo "[DEBUG]   {{env component}}_BOOTSTRAPPED=true" >> infos
+echo "[DEBUG]   {{env component}}_BOOTSTRAPPED_BY=sk8s.net" >> infos
+echo "[DEBUG]   {{env component}}_BOOTSTRAPPED_AT={{timestamp}}" >> infos
+echo "[DEBUG] Bootstrap completed successfully" >> infos
+{{/if}}
