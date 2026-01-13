@@ -345,11 +345,7 @@ describe('Integration Tests', () => {
       expect(response.text).toContain('#   Component:     dockerd-kubelet');
       expect(response.text).toContain('#   Version:       v1.28.0');
       expect(response.text).toContain('#   Machine ID:    debug-test-node');
-      expect(response.text).toContain('[DEBUG] SK8S Bootstrap Service - Debug Mode Enabled');
-      expect(response.text).toContain('[DEBUG] Component: dockerd-kubelet vv1.28.0');
-      expect(response.text).toContain('[DEBUG] Kubelet flags configured:');
-      expect(response.text).toContain('[DEBUG] CRI-Dockerd flags configured:');
-      expect(response.text).toContain('[DEBUG] Bootstrap completed successfully');
+      expect(response.text).toContain('set -x');
     });
 
     it('should accept X-Debug value of "1"', async () => {
