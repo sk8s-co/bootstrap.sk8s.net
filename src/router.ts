@@ -55,23 +55,11 @@ export const router = () => {
       let script: string;
 
       switch (sanitizedData.component) {
-        case 'kubelet':
+        case 'dockerd-kubelet':
           script = generateKubeletScript(baseData);
           break;
-
-        case 'controller-manager':
-        case 'scheduler':
-        case 'cri-dockerd':
-        case 'kube-proxy':
-          throw new Error(
-            `Component '${sanitizedData.component}' is not yet implemented`,
-          );
-
-        default: {
-          // Exhaustive check - TypeScript will error if we miss a case
-          const exhaustiveCheck: never = sanitizedData.component;
-          throw new Error(`Unhandled component: ${exhaustiveCheck}`);
-        }
+        default:
+          throw new Error(`Unknown component: ${sanitizedData.component}`);
       }
 
       res.setHeader('Content-Type', 'text/x-shellscript');

@@ -50,7 +50,7 @@ export const sanitized = () => {
       // Guard: Reject requests without valid component
       if (!parsedUA.component) {
         throw new Error(
-          'Unknown component. User-Agent must specify a valid component (kubelet, controller-manager, scheduler, cri-dockerd, kube-proxy)',
+          'Unknown component. User-Agent must specify a valid component.',
         );
       }
 
@@ -87,13 +87,13 @@ export const errorHandler = (
 
   switch (acceptedType) {
     case 'text/x-shellscript': {
-      // Return error as a bash script
+      // Return error as a bash script that exits with non-zero status
       const errorData: ErrorData = {
         timestamp: new Date().toISOString(),
         message: err.message,
       };
       const errorScript = errorTemplate(errorData);
-      res.status(500).setHeader('Content-Type', 'text/x-shellscript');
+      res.status(200).setHeader('Content-Type', 'text/x-shellscript');
       res.send(errorScript);
       break;
     }

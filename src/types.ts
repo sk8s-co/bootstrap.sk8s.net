@@ -1,9 +1,4 @@
-export type Component =
-  | 'kubelet'
-  | 'controller-manager'
-  | 'scheduler'
-  | 'cri-dockerd'
-  | 'kube-proxy';
+export type Component = 'dockerd-kubelet';
 
 export interface BaseScriptData {
   timestamp: string;

@@ -2,14 +2,6 @@
 set -Eeuo pipefail
 exec >&2
 
-# SK8S Bootstrap Error
-# Timestamp: {{timestamp}}
-
-{{#if message}}
-# Error: {{message}}
-{{/if}}
-
-# Please contact support if this error persists
-
-echo "Error: {{message}}"
+echo "Bootstrap Error:"
+echo "  ❗️  {{message}}"
 exit 1

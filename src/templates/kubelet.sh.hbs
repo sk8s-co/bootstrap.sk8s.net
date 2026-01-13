@@ -2,14 +2,23 @@
 set -Eeuo pipefail
 exec >&2
 
-# SK8S Kubelet Bootstrap Script
-# Generated on: {{timestamp}}
+export KUBELET_FLAGS="\
+--config=${KUBELET_CONFIG} \
+--root-dir=/var/run/kube \
+--cert-dir=/var/run/kube/pki \
+--cluster-domain=${CLUSTER_DOMAIN} \
+--cluster-dns=${CLUSTER_DNS} \
+"
 
-echo "=== SK8S Kubelet Bootstrap ==="
-echo "    Machine ID: {{machineId}}"
-echo "    Component: {{component}}"
-echo "    Version: {{version}}"
-echo ""
+export CRI_DOCKERD_FLAGS="\
+--container-runtime-endpoint=unix:///var/run/cri-dockerd.sock \
+--cri-dockerd-root-directory=/var/run/kube/cri-dockerd \
+--network-plugin=cni \
+--hairpin-mode=hairpin-veth \
+"
+
+echo "Activating standalone configuration: /etc/kubernetes/kubelet/standalone.yaml" >> infos
+cp /etc/kubernetes/kubelet/standalone.yaml "${KUBELET_CONFIG}"
 
 export {{uppercase component}}_BOOTSTRAPPED="true"
 export {{uppercase component}}_BOOTSTRAPPED_BY="sk8s.net"
