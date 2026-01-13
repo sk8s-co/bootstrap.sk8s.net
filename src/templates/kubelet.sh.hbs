@@ -19,8 +19,11 @@ exec >&2
 set -x
 {{/if}}
 
+export KUBECONFIG="/var/run/kubeconfig"
+
 export KUBELET_FLAGS="\
 --config=${KUBELET_CONFIG} \
+--kubeconfig=${KUBECONFIG} \
 --root-dir=/var/run/kube \
 --cert-dir=/var/run/kube/pki \
 --cluster-domain=${CLUSTER_DOMAIN} \
@@ -43,12 +46,11 @@ echo "Kubelet Config: /etc/kubernetes/kubelet/{{machineId}}.yaml" >> infos
 ln -sf /etc/kubernetes/kubelet/{{machineId}}.yaml "${KUBELET_CONFIG}"
 echo "Kubelet Config Symlink: ${KUBELET_CONFIG}" >> infos
 
-cat > /var/run/kubeconfig << 'KUBECONFIG_YAML_EOF'
+cat > ${KUBECONFIG} << 'KUBECONFIG_YAML_EOF'
 # Generated at {{timestamp}}
 {{{kubeconfigYaml}}}
 KUBECONFIG_YAML_EOF
-echo "Kubeconfig: /var/run/kubeconfig" >> infos
-export KUBECONFIG="/var/run/kubeconfig"
+echo "Kubeconfig: ${KUBECONFIG}" >> infos
 
 export {{env component}}_BOOTSTRAPPED="true"
 export {{env component}}_BOOTSTRAPPED_BY="sk8s.net"
