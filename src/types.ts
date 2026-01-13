@@ -43,3 +43,10 @@ export interface SanitizedScriptData {
   machineToken?: string;
   debug: boolean;
 }
+
+export interface Kubeconfig {
+  'current-context': string;
+  clusters: Array<{ name: string; cluster: { server: string } }>;
+  users: Array<{ name: string; user: { token: string } }>;
+  contexts: Array<{ name: string; context: { cluster: string; user: string } }>;
+}

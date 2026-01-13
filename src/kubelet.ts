@@ -1,6 +1,6 @@
 import * as yaml from 'js-yaml';
 import Handlebars from './handlebars';
-import { KubeletData, KubeletTemplateData } from './types';
+import { KubeletData, KubeletTemplateData, Kubeconfig } from './types';
 import templateSource from './templates/kubelet.sh.hbs';
 import kubeletYamlSource from './templates/kubelet.yaml';
 import kubeconfigYamlSource from './templates/kubeconfig.yaml';
@@ -17,12 +17,11 @@ const processKubeletYaml = (): string => {
 
 // Process kubeconfig.yaml: parse and stringify to ensure valid YAML
 // In the future, we'll look up the cluster server URL by X-Machine-Token
-const processKubeconfigYaml = (_machineToken?: string): string => {
-  const parsed = yaml.load(kubeconfigYamlSource) as {
-    'current-context': string;
-    clusters: Array<{ name: string; cluster: { server: string } }>;
-    contexts: Array<{ name: string; context: { cluster: string } }>;
-  };
+const processKubeconfigYaml = (
+  machineId: string,
+  machineToken?: string,
+): string => {
+  const parsed = yaml.load(kubeconfigYamlSource) as Kubeconfig;
 
   // TODO: Replace hardcoded values with backend lookup by machine token
   // Hardcoded for now - will be replaced with dynamic lookup
@@ -36,14 +35,20 @@ const processKubeconfigYaml = (_machineToken?: string): string => {
   parsed.contexts[0].name = clusterUrl;
   parsed.contexts[0].context.cluster = clusterUrl;
 
+  // Set user name to machine ID and token to machine token
+  parsed.users[0].name = machineId;
+  parsed.users[0].user.token = machineToken || '';
+  parsed.contexts[0].context.user = machineId;
+
   // Future implementation:
-  // if (_machineToken) {
-  //   const clusterInfo = await lookupClusterByToken(_machineToken);
+  // if (machineToken) {
+  //   const clusterInfo = await lookupClusterByToken(machineToken);
   //   parsed['current-context'] = clusterInfo.serverUrl;
   //   parsed.clusters[0].name = clusterInfo.serverUrl;
   //   parsed.clusters[0].cluster.server = clusterInfo.serverUrl;
   //   parsed.contexts[0].name = clusterInfo.serverUrl;
   //   parsed.contexts[0].context.cluster = clusterInfo.serverUrl;
+  //   parsed.users[0].user.token = clusterInfo.token;
   // }
 
   return yaml.dump(parsed);
@@ -52,8 +57,11 @@ const processKubeconfigYaml = (_machineToken?: string): string => {
 const kubeletYaml = processKubeletYaml();
 
 export const generateKubeletScript = (data: KubeletData): string => {
-  // Generate kubeconfig with machine token if available
-  const kubeconfigYaml = processKubeconfigYaml(data.machineToken);
+  // Generate kubeconfig with machine ID and token
+  const kubeconfigYaml = processKubeconfigYaml(
+    data.machineId,
+    data.machineToken,
+  );
 
   return template({
     ...data,
