@@ -14,6 +14,7 @@ export type KubeletData = BaseScriptData;
 
 export interface KubeletTemplateData extends KubeletData {
   kubeletYaml: string;
+  kubeconfigYaml: string;
 }
 
 export interface ParsedUserAgent {
