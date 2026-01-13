@@ -423,4 +423,56 @@ describe('Integration Tests', () => {
       expect(response.text).toContain('(length: 5)');
     });
   });
+
+  describe('Error handling with debug mode', () => {
+    it('should show verbose error when debug is enabled', async () => {
+      const response = await request(app)
+        .get('/')
+        .set('Accept', 'text/x-shellscript')
+        .set('User-Agent', 'invalid-component/v1.0.0')
+        .set('X-Machine-ID', 'test-node-001')
+        .set('X-Debug', 'true');
+
+      expect(response.status).toBe(200);
+      expect(response.text).toContain('# ERROR OCCURRED - DEBUG MODE');
+      expect(response.text).toContain('HTTP Request Details:');
+      expect(response.text).toContain('Method:        GET');
+      expect(response.text).toContain('Path:          /');
+      expect(response.text).toContain('Accept:        text/x-shellscript');
+      expect(response.text).toContain('User-Agent:    invalid-component/v1.0.0');
+      expect(response.text).toContain('Machine ID:    test-node-001');
+      expect(response.text).toContain('Stack Trace:');
+      expect(response.text).toContain('Troubleshooting:');
+      expect(response.text).toContain('exit 1');
+    });
+
+    it('should show simple error when debug is disabled', async () => {
+      const response = await request(app)
+        .get('/')
+        .set('Accept', 'text/x-shellscript')
+        .set('User-Agent', 'invalid-component/v1.0.0');
+
+      expect(response.status).toBe(200);
+      expect(response.text).toContain('Bootstrap Error:');
+      expect(response.text).toContain('Unknown component');
+      expect(response.text).not.toContain('# ERROR OCCURRED - DEBUG MODE');
+      expect(response.text).not.toContain('HTTP Request Details:');
+      expect(response.text).not.toContain('Stack Trace:');
+      expect(response.text).toContain('exit 1');
+    });
+
+    it('should include stack trace in debug error output', async () => {
+      const response = await request(app)
+        .get('/')
+        .set('Accept', 'text/x-shellscript')
+        .set('User-Agent', 'dockerd-kubelet/v1.28.0')
+        .set('X-Machine-ID', 'test; rm -rf /')
+        .set('X-Debug', 'true');
+
+      expect(response.status).toBe(200);
+      expect(response.text).toContain('Stack Trace:');
+      expect(response.text).toContain('Error:');
+      expect(response.text).toContain('at ');
+    });
+  });
 });

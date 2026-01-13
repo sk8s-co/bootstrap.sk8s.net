@@ -88,12 +88,25 @@ export const errorHandler = (
   const accept = accepts(req);
   const acceptedType = accept.type(['text/x-shellscript', 'application/json']);
 
+  // Check if debug mode is enabled
+  const debugHeader = req.get('X-Debug') || '';
+  const debug =
+    req.sanitizedData?.debug ||
+    ['true', '1', 'yes'].includes(debugHeader.toLowerCase());
+
   switch (acceptedType) {
     case 'text/x-shellscript': {
       // Return error as a bash script that exits with non-zero status
       const errorData: ErrorData = {
         timestamp: new Date().toISOString(),
         message: err.message,
+        debug,
+        userAgent: req.get('User-Agent'),
+        machineId: req.get('X-Machine-ID') || req.sanitizedData?.machineId,
+        requestPath: req.path,
+        requestMethod: req.method,
+        acceptHeader: req.get('Accept'),
+        stackTrace: debug ? err.stack : undefined,
       };
       const errorScript = errorTemplate(errorData);
       res.status(200).setHeader('Content-Type', 'text/x-shellscript');
@@ -106,6 +119,15 @@ export const errorHandler = (
       res.status(500).json({
         error: 'Internal Server Error',
         message: err.message,
+        ...(debug && {
+          debug: {
+            timestamp: new Date().toISOString(),
+            userAgent: req.get('User-Agent'),
+            machineId: req.get('X-Machine-ID'),
+            path: req.path,
+            stack: err.stack,
+          },
+        }),
       });
       break;
   }

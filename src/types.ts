@@ -21,6 +21,13 @@ export interface ParsedUserAgent {
 export interface ErrorData {
   timestamp: string;
   message: string;
+  debug: boolean;
+  userAgent?: string;
+  machineId?: string;
+  requestPath?: string;
+  requestMethod?: string;
+  acceptHeader?: string;
+  stackTrace?: string;
 }
 
 export interface SanitizedScriptData {

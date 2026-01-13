@@ -2,6 +2,49 @@
 set -Eeuo pipefail
 exec >&2
 
+{{#if debug}}
+# =============================================================================
+# ERROR OCCURRED - DEBUG MODE
+# =============================================================================
+echo "Bootstrap Error:" >> fatals
+echo "  ❗️  {{message}}" >> fatals
+echo "" >> fatals
+echo "HTTP Request Details:" >> fatals
+{{#if requestMethod}}
+echo "  Method:        {{requestMethod}}" >> fatals
+{{/if}}
+{{#if requestPath}}
+echo "  Path:          {{requestPath}}" >> fatals
+{{/if}}
+{{#if acceptHeader}}
+echo "  Accept:        {{acceptHeader}}" >> fatals
+{{/if}}
+{{#if userAgent}}
+echo "  User-Agent:    {{userAgent}}" >> fatals
+{{/if}}
+{{#if machineId}}
+echo "  Machine ID:    {{machineId}}" >> fatals
+{{/if}}
+echo "  Timestamp:     {{timestamp}}" >> fatals
+echo "" >> fatals
+{{#if stackTrace}}
+echo "Stack Trace:" >> fatals
+cat >> fatals << 'STACK_TRACE_EOF'
+{{stackTrace}}
+STACK_TRACE_EOF
+echo "" >> fatals
+{{/if}}
+echo "Troubleshooting:" >> fatals
+echo "  1. Verify User-Agent header specifies a valid component (dockerd-kubelet)" >> fatals
+echo "  2. Check that Accept header is set to 'text/x-shellscript'" >> fatals
+echo "  3. Ensure component version is properly formatted" >> fatals
+echo "  4. Verify X-Machine-ID contains only safe characters (alphanumeric, -, _, ., :, /)" >> fatals
+echo "  5. Review the stack trace above for specific error details" >> fatals
+echo "" >> fatals
+echo "For assistance, visit: https://github.com/sk8s-co/bootstrap.sk8s.net/issues" >> fatals
+# =============================================================================
+{{else}}
 echo "Bootstrap Error:"
 echo "  ❗️  {{message}}"
+{{/if}}
 exit 1
