@@ -10,58 +10,78 @@ describe('Integration Tests', () => {
   });
 
   describe('GET / with Accept: text/x-shellscript', () => {
-    it('should return kubelet bootstrap script with all fields', async () => {
+    it('should return dockerd-kubelet bootstrap script with all fields', async () => {
       const response = await request(app)
         .get('/')
         .set('Accept', 'text/x-shellscript')
-        .set('User-Agent', 'kubelet/v1.28.0')
+        .set('User-Agent', 'dockerd-kubelet/v1.28.0')
         .set('X-Machine-ID', 'test-machine-123');
 
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toMatch(/text\/x-shellscript/);
-      expect(response.text).toContain('#!/bin/bash');
-      expect(response.text).toContain('SK8S Kubelet Bootstrap Script');
-      expect(response.text).toContain('Machine ID: test-machine-123');
-      expect(response.text).toContain('Component: kubelet');
-      expect(response.text).toContain('Version: v1.28.0');
-      expect(response.text).toContain('export KUBELET_BOOTSTRAPPED="true"');
+      expect(response.text).toContain('#!/usr/bin/env bash');
+      expect(response.text).toContain('export KUBELET_FLAGS=');
+      expect(response.text).toContain('export CRI_DOCKERD_FLAGS=');
+      expect(response.text).toContain('export DOCKERD-KUBELET_BOOTSTRAPPED="true"');
       expect(response.text).toContain(
-        'export KUBELET_BOOTSTRAPPED_BY="sk8s.net"',
+        'export DOCKERD-KUBELET_BOOTSTRAPPED_BY="sk8s.net"',
       );
+      expect(response.text).toContain('export DOCKERD-KUBELET_BOOTSTRAPPED_AT=');
     });
 
-    it('should return kubelet script with default values for missing fields', async () => {
+    it('should return dockerd-kubelet script with default values for missing fields', async () => {
       const response = await request(app)
         .get('/')
         .set('Accept', 'text/x-shellscript')
-        .set('User-Agent', 'kubelet/v1.28.0');
+        .set('User-Agent', 'dockerd-kubelet/v1.28.0');
 
       expect(response.status).toBe(200);
-      expect(response.text).toContain('Machine ID: unknown');
-      expect(response.text).toContain('Component: kubelet');
-      expect(response.text).toContain('Version: v1.28.0');
+      expect(response.text).toContain('#!/usr/bin/env bash');
+      expect(response.text).toContain('export DOCKERD-KUBELET_BOOTSTRAPPED="true"');
     });
 
     it('should handle component-only User-Agent', async () => {
       const response = await request(app)
         .get('/')
         .set('Accept', 'text/x-shellscript')
-        .set('User-Agent', 'kubelet');
+        .set('User-Agent', 'dockerd-kubelet');
 
       expect(response.status).toBe(200);
-      expect(response.text).toContain('Component: kubelet');
-      expect(response.text).toContain('Version: latest');
+      expect(response.text).toContain('#!/usr/bin/env bash');
+      expect(response.text).toContain('export DOCKERD-KUBELET_BOOTSTRAPPED="true"');
     });
 
     it('should handle sk8s-prefixed User-Agent', async () => {
       const response = await request(app)
         .get('/')
         .set('Accept', 'text/x-shellscript')
-        .set('User-Agent', 'sk8s-kubelet/v1.29.0');
+        .set('User-Agent', 'sk8s-dockerd-kubelet/v1.29.0');
 
       expect(response.status).toBe(200);
-      expect(response.text).toContain('Component: kubelet');
-      expect(response.text).toContain('Version: v1.29.0');
+      expect(response.text).toContain('#!/usr/bin/env bash');
+      expect(response.text).toContain('export DOCKERD-KUBELET_BOOTSTRAPPED="true"');
+    });
+
+    it('should handle User-Agent with metadata in parentheses', async () => {
+      const response = await request(app)
+        .get('/')
+        .set('Accept', 'text/x-shellscript')
+        .set(
+          'User-Agent',
+          'dockerd-kubelet/1.34 (cri-dockerd/0.3.21; crictl/1.33.0; cni/1.7.1; alpine; linux/arm64)',
+        )
+        .set('X-Machine-ID', 'test-machine-001');
+
+      expect(response.status).toBe(200);
+      expect(response.headers['content-type']).toMatch(/text\/x-shellscript/);
+      expect(response.text).toContain('#!/usr/bin/env bash');
+      expect(response.text).toContain('export KUBELET_FLAGS=');
+      expect(response.text).toContain('export CRI_DOCKERD_FLAGS=');
+      expect(response.text).toContain('export DOCKERD-KUBELET_BOOTSTRAPPED="true"');
+      expect(response.text).toContain(
+        'export DOCKERD-KUBELET_BOOTSTRAPPED_BY="sk8s.net"',
+      );
+      expect(response.text).toContain('export DOCKERD-KUBELET_BOOTSTRAPPED_AT=');
     });
 
     it('should return error for unknown component', async () => {
@@ -70,10 +90,10 @@ describe('Integration Tests', () => {
         .set('Accept', 'text/x-shellscript')
         .set('User-Agent', 'invalid-component/v1.0.0');
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(200);
       expect(response.headers['content-type']).toMatch(/text\/x-shellscript/);
-      expect(response.text).toContain('#!/bin/bash');
-      expect(response.text).toContain('SK8S Bootstrap Error');
+      expect(response.text).toContain('#!/usr/bin/env bash');
+      expect(response.text).toContain('Bootstrap Error');
       expect(response.text).toContain('Unknown component');
       expect(response.text).toContain('exit 1');
     });
@@ -83,8 +103,8 @@ describe('Integration Tests', () => {
         .get('/')
         .set('Accept', 'text/x-shellscript');
 
-      expect(response.status).toBe(500);
-      expect(response.text).toContain('SK8S Bootstrap Error');
+      expect(response.status).toBe(200);
+      expect(response.text).toContain('Bootstrap Error');
       expect(response.text).toContain('Unknown component');
     });
 
@@ -92,11 +112,11 @@ describe('Integration Tests', () => {
       const response = await request(app)
         .get('/')
         .set('Accept', 'text/x-shellscript')
-        .set('User-Agent', 'kubelet/v1.28.0')
+        .set('User-Agent', 'dockerd-kubelet/v1.28.0')
         .set('X-Machine-ID', 'test; rm -rf /');
 
-      expect(response.status).toBe(500);
-      expect(response.text).toContain('SK8S Bootstrap Error');
+      expect(response.status).toBe(200);
+      expect(response.text).toContain('Bootstrap Error');
       expect(response.text).toContain('Invalid Machine ID');
       expect(response.text).toContain('unsafe characters');
       expect(response.text).toContain('exit 1');
@@ -106,10 +126,10 @@ describe('Integration Tests', () => {
       const response = await request(app)
         .get('/')
         .set('Accept', 'text/x-shellscript')
-        .set('User-Agent', 'kubelet/$(whoami)');
+        .set('User-Agent', 'dockerd-kubelet/$(whoami)');
 
-      expect(response.status).toBe(500);
-      expect(response.text).toContain('SK8S Bootstrap Error');
+      expect(response.status).toBe(200);
+      expect(response.text).toContain('Bootstrap Error');
       expect(response.text).toContain('Invalid User-Agent');
       expect(response.text).toContain('unsafe characters');
     });
@@ -118,14 +138,14 @@ describe('Integration Tests', () => {
       const response = await request(app)
         .get('/')
         .set('Accept', 'text/x-shellscript')
-        .set('User-Agent', 'kubelet/`id`');
+        .set('User-Agent', 'dockerd-kubelet/`id`');
 
-      expect(response.status).toBe(500);
-      expect(response.text).toContain('SK8S Bootstrap Error');
+      expect(response.status).toBe(200);
+      expect(response.text).toContain('Bootstrap Error');
       expect(response.text).toContain('Invalid User-Agent');
     });
 
-    it('should return not implemented for other components', async () => {
+    it('should return error for invalid components', async () => {
       const components = [
         'controller-manager',
         'scheduler',
@@ -139,9 +159,9 @@ describe('Integration Tests', () => {
           .set('Accept', 'text/x-shellscript')
           .set('User-Agent', `${component}/v1.28.0`);
 
-        expect(response.status).toBe(500);
-        expect(response.text).toContain('SK8S Bootstrap Error');
-        expect(response.text).toContain('not yet implemented');
+        expect(response.status).toBe(200);
+        expect(response.text).toContain('Bootstrap Error');
+        expect(response.text).toContain('Unknown component');
       }
     });
   });
@@ -155,7 +175,7 @@ describe('Integration Tests', () => {
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toMatch(/application\/json/);
       expect(response.body).toEqual({
-        message: 'Hello from Express + TypeScript!',
+        message: 'sk8s.net bootstrap service',
       });
     });
 
@@ -166,11 +186,11 @@ describe('Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
-        message: 'Hello from Express + TypeScript!',
+        message: 'sk8s.net bootstrap service',
       });
     });
 
-    it('should return JSON error for invalid component', async () => {
+    it('should return JSON response for invalid component', async () => {
       const response = await request(app)
         .get('/')
         .set('Accept', 'application/json')
@@ -178,7 +198,7 @@ describe('Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
-        message: 'Hello from Express + TypeScript!',
+        message: 'sk8s.net bootstrap service',
       });
     });
   });
@@ -236,7 +256,7 @@ describe('Integration Tests', () => {
         .set('User-Agent', 'curl/7.68.0');
 
       expect(response.status).toBe(500);
-      // Default Express error handling for unsupported content type
+      expect(response.body).toHaveProperty('error');
     });
   });
 
@@ -246,34 +266,36 @@ describe('Integration Tests', () => {
       const response = await request(app)
         .get('/')
         .set('Accept', 'text/x-shellscript')
-        .set('User-Agent', 'kubelet/v1.28.0')
+        .set('User-Agent', 'dockerd-kubelet/v1.28.0')
         .set('X-Machine-ID', longId);
 
       expect(response.status).toBe(200);
-      expect(response.text).toContain(`Machine ID: ${longId}`);
+      expect(response.text).toContain('#!/usr/bin/env bash');
+      expect(response.text).toContain('export DOCKERD-KUBELET_BOOTSTRAPPED="true"');
     });
 
     it('should handle special but safe characters', async () => {
       const response = await request(app)
         .get('/')
         .set('Accept', 'text/x-shellscript')
-        .set('User-Agent', 'kubelet/v1.28.0')
+        .set('User-Agent', 'dockerd-kubelet/v1.28.0')
         .set('X-Machine-ID', 'test-node_01.prod:8080');
 
       expect(response.status).toBe(200);
-      expect(response.text).toContain('Machine ID: test-node_01.prod:8080');
+      expect(response.text).toContain('#!/usr/bin/env bash');
+      expect(response.text).toContain('export DOCKERD-KUBELET_BOOTSTRAPPED="true"');
     });
 
     it('should generate unique timestamps', async () => {
       const response1 = await request(app)
         .get('/')
         .set('Accept', 'text/x-shellscript')
-        .set('User-Agent', 'kubelet/v1.28.0');
+        .set('User-Agent', 'dockerd-kubelet/v1.28.0');
 
       const response2 = await request(app)
         .get('/')
         .set('Accept', 'text/x-shellscript')
-        .set('User-Agent', 'kubelet/v1.28.0');
+        .set('User-Agent', 'dockerd-kubelet/v1.28.0');
 
       expect(response1.status).toBe(200);
       expect(response2.status).toBe(200);

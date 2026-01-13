@@ -78,36 +78,44 @@ describe('sanitizeForBash', () => {
   it('should return empty string for empty input', () => {
     expect(sanitizeForBash('', 'field')).toBe('');
   });
+
+  it('should allow parentheses and semicolons when allowMetadata is true', () => {
+    expect(
+      sanitizeForBash(
+        'dockerd-kubelet/1.34 (cri-dockerd/0.3.21; crictl/1.33.0)',
+        'User-Agent',
+        true,
+      ),
+    ).toBe('dockerd-kubelet/1.34 (cri-dockerd/0.3.21; crictl/1.33.0)');
+  });
+
+  it('should throw on parentheses when allowMetadata is false', () => {
+    expect(() => sanitizeForBash('test(value)', 'field', false)).toThrow(
+      'Invalid field: contains unsafe characters',
+    );
+  });
+
+  it('should throw on semicolons when allowMetadata is false', () => {
+    expect(() => sanitizeForBash('test;value', 'field', false)).toThrow(
+      'Invalid field: contains unsafe characters',
+    );
+  });
 });
 
 describe('isValidComponent', () => {
-  it('should return true for kubelet', () => {
-    expect(isValidComponent('kubelet')).toBe(true);
-  });
-
-  it('should return true for controller-manager', () => {
-    expect(isValidComponent('controller-manager')).toBe(true);
-  });
-
-  it('should return true for scheduler', () => {
-    expect(isValidComponent('scheduler')).toBe(true);
-  });
-
-  it('should return true for cri-dockerd', () => {
-    expect(isValidComponent('cri-dockerd')).toBe(true);
-  });
-
-  it('should return true for kube-proxy', () => {
-    expect(isValidComponent('kube-proxy')).toBe(true);
+  it('should return true for dockerd-kubelet', () => {
+    expect(isValidComponent('dockerd-kubelet')).toBe(true);
   });
 
   it('should be case insensitive', () => {
-    expect(isValidComponent('KUBELET')).toBe(true);
-    expect(isValidComponent('Kubelet')).toBe(true);
+    expect(isValidComponent('DOCKERD-KUBELET')).toBe(true);
+    expect(isValidComponent('Dockerd-Kubelet')).toBe(true);
   });
 
   it('should return false for invalid component', () => {
     expect(isValidComponent('invalid')).toBe(false);
+    expect(isValidComponent('kubelet')).toBe(false);
+    expect(isValidComponent('controller-manager')).toBe(false);
   });
 
   it('should return false for undefined', () => {
@@ -121,38 +129,63 @@ describe('isValidComponent', () => {
 
 describe('parseUserAgent', () => {
   it('should parse standard format: component/version', () => {
-    const result = parseUserAgent('kubelet/v1.28.0');
-    expect(result.component).toBe('kubelet');
+    const result = parseUserAgent('dockerd-kubelet/v1.28.0');
+    expect(result.component).toBe('dockerd-kubelet');
     expect(result.version).toBe('v1.28.0');
-    expect(result.raw).toBe('kubelet/v1.28.0');
+    expect(result.raw).toBe('dockerd-kubelet/v1.28.0');
+  });
+
+  it('should parse format with metadata in parentheses', () => {
+    const result = parseUserAgent(
+      'dockerd-kubelet/1.34 (cri-dockerd/0.3.21; crictl/1.33.0; cni/1.7.1; alpine; linux/arm64)',
+    );
+    expect(result.component).toBe('dockerd-kubelet');
+    expect(result.version).toBe('1.34');
+    expect(result.raw).toBe(
+      'dockerd-kubelet/1.34 (cri-dockerd/0.3.21; crictl/1.33.0; cni/1.7.1; alpine; linux/arm64)',
+    );
+  });
+
+  it('should parse format with version prefix', () => {
+    const result = parseUserAgent('dockerd-kubelet/v1.34.5');
+    expect(result.component).toBe('dockerd-kubelet');
+    expect(result.version).toBe('v1.34.5');
+    expect(result.raw).toBe('dockerd-kubelet/v1.34.5');
   });
 
   it('should parse sk8s prefix format', () => {
-    const result = parseUserAgent('sk8s-controller-manager/v1.29.0');
-    expect(result.component).toBe('controller-manager');
+    const result = parseUserAgent('sk8s-dockerd-kubelet/v1.29.0');
+    expect(result.component).toBe('dockerd-kubelet');
     expect(result.version).toBe('v1.29.0');
-    expect(result.raw).toBe('sk8s-controller-manager/v1.29.0');
+    expect(result.raw).toBe('sk8s-dockerd-kubelet/v1.29.0');
   });
 
   it('should parse component-only format', () => {
-    const result = parseUserAgent('kubelet');
-    expect(result.component).toBe('kubelet');
+    const result = parseUserAgent('dockerd-kubelet');
+    expect(result.component).toBe('dockerd-kubelet');
     expect(result.version).toBe(null);
-    expect(result.raw).toBe('kubelet');
+    expect(result.raw).toBe('dockerd-kubelet');
   });
 
   it('should parse component-only format with sk8s prefix', () => {
-    const result = parseUserAgent('sk8s-scheduler');
-    expect(result.component).toBe('scheduler');
+    const result = parseUserAgent('sk8s-dockerd-kubelet');
+    expect(result.component).toBe('dockerd-kubelet');
     expect(result.version).toBe(null);
-    expect(result.raw).toBe('sk8s-scheduler');
+    expect(result.raw).toBe('sk8s-dockerd-kubelet');
   });
 
-  it('should return null for invalid component', () => {
+  it('should return null component for invalid component', () => {
     const result = parseUserAgent('invalid/v1.0.0');
     expect(result.component).toBe(null);
     expect(result.version).toBe('v1.0.0');
     expect(result.raw).toBe('invalid/v1.0.0');
+  });
+
+  it('should return null component for kubelet (not dockerd-kubelet)', () => {
+    const result = parseUserAgent('kubelet/v1.28.0');
+    expect(result.component).toBe(null);
+    expect(result.version).toBe('v1.28.0');
+    expect(result.raw).toBe('kubelet/v1.28.0');
   });
 
   it('should return null for undefined user agent', () => {
@@ -167,21 +200,5 @@ describe('parseUserAgent', () => {
     expect(result.component).toBe(null);
     expect(result.version).toBe(null);
     expect(result.raw).toBe('');
-  });
-
-  it('should handle all valid components', () => {
-    const components = [
-      'kubelet',
-      'controller-manager',
-      'scheduler',
-      'cri-dockerd',
-      'kube-proxy',
-    ];
-
-    components.forEach((component) => {
-      const result = parseUserAgent(`${component}/v1.0.0`);
-      expect(result.component).toBe(component);
-      expect(result.version).toBe('v1.0.0');
-    });
   });
 });

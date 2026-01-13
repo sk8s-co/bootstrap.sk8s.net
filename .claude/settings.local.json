@@ -1,5 +1,5 @@
 {
   "permissions": {
-    "allow": ["Bash(*)", "WebSearch", "WebFetch"]
+    "allow": ["Bash", "WebSearch", "WebFetch"]
   }
 }

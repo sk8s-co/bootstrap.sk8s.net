@@ -10,6 +10,7 @@ module.exports = {
     '!src/**/*.spec.ts',
   ],
   coverageDirectory: 'coverage',
+  coverageReporters: ['json-summary', 'text', 'lcov'],
   verbose: true,
   transform: {
     '^.+\\.tsx?$': 'ts-jest',

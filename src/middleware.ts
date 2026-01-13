@@ -60,7 +60,7 @@ export const sanitized = () => {
 
       req.sanitizedData = {
         component: parsedUA.component,
-        userAgent: sanitizeForBash(parsedUA.raw, 'User-Agent'),
+        userAgent: sanitizeForBash(parsedUA.raw, 'User-Agent', true),
         machineId: sanitizeForBash(machineId, 'Machine ID'),
         machineToken: req.get('X-Machine-Token') || undefined,
         version: sanitizeForBash(version, 'Version'),

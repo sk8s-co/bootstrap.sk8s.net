@@ -47,14 +47,20 @@ export const isBrowser = (userAgent: string | undefined): boolean => {
 
 /**
  * Sanitizes a string for safe use in bash scripts
- * Only allows alphanumeric, dash, underscore, dot, colon, and forward slash
+ * Only allows alphanumeric, dash, underscore, dot, colon, forward slash, and optionally parentheses/semicolons/spaces
  * Throws error if string contains potentially dangerous characters
  */
-export const sanitizeForBash = (value: string, fieldName: string): string => {
+export const sanitizeForBash = (
+  value: string,
+  fieldName: string,
+  allowMetadata = false,
+): string => {
   if (!value) return value;
 
-  // Only allow safe characters: alphanumeric, dash, underscore, dot, colon, forward slash
-  const safePattern = /^[a-zA-Z0-9._:/-]+$/;
+  // For metadata fields (like raw User-Agent), allow additional safe characters
+  const safePattern = allowMetadata
+    ? /^[a-zA-Z0-9._:/\-() ;]+$/
+    : /^[a-zA-Z0-9._:/-]+$/;
 
   if (!safePattern.test(value)) {
     throw new Error(
@@ -69,13 +75,7 @@ export const isValidComponent = (
   value: string | undefined,
 ): value is Component => {
   if (!value) return false;
-  const validComponents: Component[] = [
-    'kubelet',
-    'controller-manager',
-    'scheduler',
-    'cri-dockerd',
-    'kube-proxy',
-  ];
+  const validComponents: Component[] = ['dockerd-kubelet'];
   return validComponents.includes(value.toLowerCase() as Component);
 };
 
@@ -91,8 +91,11 @@ export const parseUserAgent = (
   const result = parser.getResult();
 
   // Check if this is a custom sk8s format: "component/version" or "sk8s-component/version"
-  // Examples: "kubelet/v1.28.0", "sk8s-controller-manager/v1.29.0"
-  const customMatch = userAgent.match(/(?:sk8s-)?([^/]+)\/(.+)/);
+  // Examples:
+  // - "kubelet/v1.28.0"
+  // - "sk8s-controller-manager/v1.29.0"
+  // - "dockerd-kubelet/1.34 (cri-dockerd/0.3.21; crictl/1.33.0; cni/1.7.1; alpine; linux/arm64)"
+  const customMatch = userAgent.match(/(?:sk8s-)?([^/]+)\/([^\s(]+)/);
 
   if (customMatch) {
     const [, componentStr, version] = customMatch;
