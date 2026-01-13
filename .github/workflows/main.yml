@@ -59,6 +59,8 @@ jobs:
       checks: write
       pull-requests: write
       contents: read
+      statuses: write
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
