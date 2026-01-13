@@ -35,6 +35,7 @@ export CRI_DOCKERD_FLAGS="\
 "
 
 cat > /etc/kubernetes/kubelet/{{machineId}}.yaml << 'KUBELET_YAML_EOF'
+# Generated at {{timestamp}}
 {{{kubeletYaml}}}
 KUBELET_YAML_EOF
 echo "Generated kubelet configuration: /etc/kubernetes/kubelet/{{machineId}}.yaml" >> infos
