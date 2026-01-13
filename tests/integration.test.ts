@@ -22,11 +22,11 @@ describe('Integration Tests', () => {
       expect(response.text).toContain('#!/usr/bin/env bash');
       expect(response.text).toContain('export KUBELET_FLAGS=');
       expect(response.text).toContain('export CRI_DOCKERD_FLAGS=');
-      expect(response.text).toContain('export DOCKERD-KUBELET_BOOTSTRAPPED="true"');
+      expect(response.text).toContain('export DOCKERD_KUBELET_BOOTSTRAPPED="true"');
       expect(response.text).toContain(
-        'export DOCKERD-KUBELET_BOOTSTRAPPED_BY="sk8s.net"',
+        'export DOCKERD_KUBELET_BOOTSTRAPPED_BY="sk8s.net"',
       );
-      expect(response.text).toContain('export DOCKERD-KUBELET_BOOTSTRAPPED_AT=');
+      expect(response.text).toContain('export DOCKERD_KUBELET_BOOTSTRAPPED_AT=');
     });
 
     it('should return dockerd-kubelet script with default values for missing fields', async () => {
@@ -37,7 +37,7 @@ describe('Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(response.text).toContain('#!/usr/bin/env bash');
-      expect(response.text).toContain('export DOCKERD-KUBELET_BOOTSTRAPPED="true"');
+      expect(response.text).toContain('export DOCKERD_KUBELET_BOOTSTRAPPED="true"');
     });
 
     it('should handle component-only User-Agent', async () => {
@@ -48,7 +48,7 @@ describe('Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(response.text).toContain('#!/usr/bin/env bash');
-      expect(response.text).toContain('export DOCKERD-KUBELET_BOOTSTRAPPED="true"');
+      expect(response.text).toContain('export DOCKERD_KUBELET_BOOTSTRAPPED="true"');
     });
 
     it('should handle sk8s-prefixed User-Agent', async () => {
@@ -59,7 +59,7 @@ describe('Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(response.text).toContain('#!/usr/bin/env bash');
-      expect(response.text).toContain('export DOCKERD-KUBELET_BOOTSTRAPPED="true"');
+      expect(response.text).toContain('export DOCKERD_KUBELET_BOOTSTRAPPED="true"');
     });
 
     it('should handle User-Agent with metadata in parentheses', async () => {
@@ -77,11 +77,11 @@ describe('Integration Tests', () => {
       expect(response.text).toContain('#!/usr/bin/env bash');
       expect(response.text).toContain('export KUBELET_FLAGS=');
       expect(response.text).toContain('export CRI_DOCKERD_FLAGS=');
-      expect(response.text).toContain('export DOCKERD-KUBELET_BOOTSTRAPPED="true"');
+      expect(response.text).toContain('export DOCKERD_KUBELET_BOOTSTRAPPED="true"');
       expect(response.text).toContain(
-        'export DOCKERD-KUBELET_BOOTSTRAPPED_BY="sk8s.net"',
+        'export DOCKERD_KUBELET_BOOTSTRAPPED_BY="sk8s.net"',
       );
-      expect(response.text).toContain('export DOCKERD-KUBELET_BOOTSTRAPPED_AT=');
+      expect(response.text).toContain('export DOCKERD_KUBELET_BOOTSTRAPPED_AT=');
     });
 
     it('should return error for unknown component', async () => {
@@ -271,7 +271,7 @@ describe('Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(response.text).toContain('#!/usr/bin/env bash');
-      expect(response.text).toContain('export DOCKERD-KUBELET_BOOTSTRAPPED="true"');
+      expect(response.text).toContain('export DOCKERD_KUBELET_BOOTSTRAPPED="true"');
     });
 
     it('should handle special but safe characters', async () => {
@@ -283,7 +283,7 @@ describe('Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(response.text).toContain('#!/usr/bin/env bash');
-      expect(response.text).toContain('export DOCKERD-KUBELET_BOOTSTRAPPED="true"');
+      expect(response.text).toContain('export DOCKERD_KUBELET_BOOTSTRAPPED="true"');
     });
 
     it('should generate unique timestamps', async () => {

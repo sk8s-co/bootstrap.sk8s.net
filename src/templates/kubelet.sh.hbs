@@ -20,6 +20,6 @@ export CRI_DOCKERD_FLAGS="\
 echo "Activating standalone configuration: /etc/kubernetes/kubelet/standalone.yaml" >> infos
 cp /etc/kubernetes/kubelet/standalone.yaml "${KUBELET_CONFIG}"
 
-export {{uppercase component}}_BOOTSTRAPPED="true"
-export {{uppercase component}}_BOOTSTRAPPED_BY="sk8s.net"
-export {{uppercase component}}_BOOTSTRAPPED_AT="{{timestamp}}"
+export {{env component}}_BOOTSTRAPPED="true"
+export {{env component}}_BOOTSTRAPPED_BY="sk8s.net"
+export {{env component}}_BOOTSTRAPPED_AT="{{timestamp}}"
