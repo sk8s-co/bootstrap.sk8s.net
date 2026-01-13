@@ -76,7 +76,18 @@ jobs:
         with:
           package-manager: yarn
           test-script: yarn test
-          annotations: all
+          annotations: failed-tests
+          skip-step: all
+        if: github.event_name == 'pull_request'
+
+      - name: Run Tests (Push Event)
+        if: github.event_name == 'push'
+        run: |
+          yarn test --coverage
+          echo "## 🧪 Tests & Coverage" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          yarn test 2>&1 | grep -E "(Test Suites:|Tests:)" >> $GITHUB_STEP_SUMMARY || echo "Tests completed" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
   deploy:
     needs: [lint, format, test]
