@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 /**
- * Jest transformer for .hbs, .md, and .css files
+ * Jest transformer for .hbs, .md, .css, and .yaml files
  * Reads file content and exports it as a string module
  * @type {import('@jest/transform').SyncTransformer}
  */

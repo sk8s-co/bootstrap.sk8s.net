@@ -12,5 +12,6 @@ export default defineConfig({
     '.hbs': 'text',
     '.md': 'text',
     '.css': 'text',
+    '.yaml': 'text',
   },
 });

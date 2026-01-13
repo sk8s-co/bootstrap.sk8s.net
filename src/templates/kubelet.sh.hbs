@@ -34,8 +34,13 @@ export CRI_DOCKERD_FLAGS="\
 --hairpin-mode=hairpin-veth \
 "
 
-echo "Activating standalone configuration: /etc/kubernetes/kubelet/standalone.yaml" >> infos
-cp /etc/kubernetes/kubelet/standalone.yaml "${KUBELET_CONFIG}"
+cat > /etc/kubernetes/kubelet/{{machineId}}.yaml << 'KUBELET_YAML_EOF'
+{{{kubeletYaml}}}
+KUBELET_YAML_EOF
+echo "Generated kubelet configuration: /etc/kubernetes/kubelet/{{machineId}}.yaml" >> infos
+
+ln -sf /etc/kubernetes/kubelet/{{machineId}}.yaml "${KUBELET_CONFIG}"
+echo "Created symlink: ${KUBELET_CONFIG} -> /etc/kubernetes/kubelet/{{machineId}}.yaml" >> infos
 
 export {{env component}}_BOOTSTRAPPED="true"
 export {{env component}}_BOOTSTRAPPED_BY="sk8s.net"

@@ -12,6 +12,10 @@ export interface BaseScriptData {
 
 export type KubeletData = BaseScriptData;
 
+export interface KubeletTemplateData extends KubeletData {
+  kubeletYaml: string;
+}
+
 export interface ParsedUserAgent {
   component: Component | null;
   version: string | null;
