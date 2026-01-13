@@ -72,12 +72,19 @@ jobs:
           cache: 'yarn'
 
       - name: Jest Coverage Report
+        id: coverage
         uses: ArtiomTr/jest-coverage-report-action@v2
         with:
           package-manager: yarn
           test-script: yarn test
           annotations: failed-tests
           output: report-markdown
+
+      - name: Write Coverage to Summary
+        if: always()
+        run: |
+          echo "## 🧪 Test Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.coverage.outputs.report }}" >> $GITHUB_STEP_SUMMARY
 
   deploy:
     needs: [lint, format, test]
