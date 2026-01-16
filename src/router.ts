@@ -13,8 +13,13 @@ export const router = () => {
 
   r.get('/kubeconfig', (req: Request, res: Response, next: NextFunction) => {
     try {
-      const url = (req.query.url as string) || '';
-      const token = (req.query.token as string) || '';
+      const url =
+        req.query.url?.toString() || req.header('x-url')?.toString() || '';
+      const token =
+        req.query.token?.toString() ||
+        req.header('x-token')?.toString() ||
+        req.header('authorization')?.toString().split(' ')[1] ||
+        '';
 
       const kubeconfig = generateKubeconfig(url, token);
 
