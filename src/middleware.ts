@@ -24,6 +24,12 @@ const errorTemplate = Handlebars.compile<ErrorData>(errorTemplateSource);
 export const sanitized = () => {
   return (req: Request, _res: Response, next: NextFunction) => {
     try {
+      // Only sanitize for the bootstrap route
+      if (req.path !== '/') {
+        next();
+        return;
+      }
+
       // Skip sanitization for browser requests
       const userAgentHeader = req.get('User-Agent');
       if (isBrowser(userAgentHeader)) {
@@ -86,7 +92,17 @@ export const errorHandler = (
   console.error('Stack:', err.stack);
 
   const accept = accepts(req);
-  const acceptedType = accept.type(['text/x-shellscript', 'application/json']);
+  const acceptHeader = req.get('Accept') || '';
+
+  // Only use shellscript format if explicitly requested
+  // (not for wildcard/missing Accept headers)
+  const explicitlyWantsShellscript =
+    acceptHeader.includes('text/x-shellscript') &&
+    !acceptHeader.startsWith('*/*');
+
+  const acceptedType = explicitlyWantsShellscript
+    ? 'text/x-shellscript'
+    : accept.type(['application/json', 'text/x-shellscript']);
 
   // Check if debug mode is enabled
   const debugHeader = req.get('X-Debug') || '';

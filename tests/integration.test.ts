@@ -443,6 +443,86 @@ describe('Integration Tests', () => {
     });
   });
 
+  describe('GET /kubeconfig', () => {
+    // Test JWT: {"alg":"none","typ":"JWT"}.{"sub":"test-user"}.
+    const validToken =
+      'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIifQ.';
+    // Test JWT without sub claim: {"alg":"none","typ":"JWT"}.{}.
+    const tokenWithoutSub = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.e30.';
+    const validUrl = 'https://api.example.com:6443';
+
+    it('should return kubeconfig YAML with valid url and token', async () => {
+      const response = await request(app)
+        .get('/kubeconfig')
+        .query({ url: validUrl, token: validToken });
+
+      expect(response.status).toBe(200);
+      expect(response.headers['content-type']).toMatch(/application\/yaml/);
+      expect(response.headers['content-disposition']).toBe(
+        'attachment; filename="kubeconfig.yaml"',
+      );
+      expect(response.text).toContain('apiVersion: v1');
+      expect(response.text).toContain('kind: Config');
+      expect(response.text).toContain('server: https://api.example.com:6443');
+      expect(response.text).toContain('name: api.example.com');
+      expect(response.text).toContain('user: test-user');
+      expect(response.text).toContain(`token: ${validToken}`);
+    });
+
+    it('should use empty host when url is missing', async () => {
+      const response = await request(app)
+        .get('/kubeconfig')
+        .query({ token: validToken });
+
+      expect(response.status).toBe(200);
+      expect(response.text).toContain("name: ''");
+    });
+
+    it('should use empty user when token is missing', async () => {
+      const response = await request(app)
+        .get('/kubeconfig')
+        .query({ url: validUrl });
+
+      expect(response.status).toBe(200);
+      expect(response.text).toContain("user: ''");
+    });
+
+    it('should use empty defaults when both url and token are missing', async () => {
+      const response = await request(app).get('/kubeconfig');
+
+      expect(response.status).toBe(200);
+      expect(response.text).toContain("name: ''");
+      expect(response.text).toContain("user: ''");
+    });
+
+    it('should use empty host for invalid URL', async () => {
+      const response = await request(app)
+        .get('/kubeconfig')
+        .query({ url: 'not-a-valid-url', token: validToken });
+
+      expect(response.status).toBe(200);
+      expect(response.text).toContain("name: ''");
+    });
+
+    it('should use empty user for invalid JWT token', async () => {
+      const response = await request(app)
+        .get('/kubeconfig')
+        .query({ url: validUrl, token: 'not-a-valid-jwt' });
+
+      expect(response.status).toBe(200);
+      expect(response.text).toContain("user: ''");
+    });
+
+    it('should use empty user when JWT is missing sub claim', async () => {
+      const response = await request(app)
+        .get('/kubeconfig')
+        .query({ url: validUrl, token: tokenWithoutSub });
+
+      expect(response.status).toBe(200);
+      expect(response.text).toContain("user: ''");
+    });
+  });
+
   describe('Error handling with debug mode', () => {
     it('should show verbose error when debug is enabled', async () => {
       const response = await request(app)

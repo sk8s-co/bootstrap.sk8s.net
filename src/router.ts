@@ -11,16 +11,20 @@ import { generateKubeconfig } from './kubeconfig';
 export const router = () => {
   const r = Router();
 
-  r.get('/kubeconfig', (req: Request, res: Response) => {
-    const url = req.query.url as string | undefined;
-    const token = req.query.token as string | undefined;
+  r.get('/kubeconfig', (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const url = (req.query.url as string) || '';
+      const token = (req.query.token as string) || '';
 
-    const kubeconfig = generateKubeconfig(url || '', token || '');
+      const kubeconfig = generateKubeconfig(url, token);
 
-    res
-      .header('Content-Type', 'application/yaml')
-      .header('Content-Disposition', 'attachment; filename="kubeconfig.yaml"')
-      .send(kubeconfig);
+      return res
+        .header('Content-Type', 'application/yaml')
+        .header('Content-Disposition', 'attachment; filename="kubeconfig.yaml"')
+        .send(kubeconfig);
+    } catch (error) {
+      next(error);
+    }
   });
 
   r.get('/', (req: Request, res: Response, next: NextFunction) => {
