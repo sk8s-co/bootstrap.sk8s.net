@@ -11,6 +11,18 @@ import { generateKubeconfig } from './kubeconfig';
 export const router = () => {
   const r = Router();
 
+  r.get('/kubeconfig', (req: Request, res: Response) => {
+    const url = req.query.url as string | undefined;
+    const token = req.query.token as string | undefined;
+
+    const kubeconfig = generateKubeconfig(url || '', token || '');
+
+    res
+      .header('Content-Type', 'application/yaml')
+      .header('Content-Disposition', 'attachment; filename="kubeconfig.yaml"')
+      .send(kubeconfig);
+  });
+
   r.get('/', (req: Request, res: Response, next: NextFunction) => {
     try {
       // Check if the User-Agent is a browser
@@ -68,18 +80,6 @@ export const router = () => {
     } catch (error) {
       next(error);
     }
-  });
-
-  r.get('/kubeconfig', (req: Request, res: Response) => {
-    const url = req.query.url as string | undefined;
-    const token = req.query.token as string | undefined;
-
-    const kubeconfig = generateKubeconfig(url || '', token || '');
-
-    res
-      .header('Content-Type', 'application/yaml')
-      .header('Content-Disposition', 'attachment; filename="kubeconfig.yaml"')
-      .send(kubeconfig);
   });
 
   return r;
