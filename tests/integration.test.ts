@@ -469,57 +469,57 @@ describe('Integration Tests', () => {
       expect(response.text).toContain(`token: ${validToken}`);
     });
 
-    it('should use empty host when url is missing', async () => {
+    it('should use default host when url is missing', async () => {
       const response = await request(app)
         .get('/kubeconfig')
         .query({ token: validToken });
 
       expect(response.status).toBe(200);
-      expect(response.text).toContain("name: ''");
+      expect(response.text).toContain('name: default');
     });
 
-    it('should use empty user when token is missing', async () => {
+    it('should use default user when token is missing', async () => {
       const response = await request(app)
         .get('/kubeconfig')
         .query({ url: validUrl });
 
       expect(response.status).toBe(200);
-      expect(response.text).toContain("user: ''");
+      expect(response.text).toContain('user: default');
     });
 
-    it('should use empty defaults when both url and token are missing', async () => {
+    it('should use defaults when both url and token are missing', async () => {
       const response = await request(app).get('/kubeconfig');
 
       expect(response.status).toBe(200);
-      expect(response.text).toContain("name: ''");
-      expect(response.text).toContain("user: ''");
+      expect(response.text).toContain('name: default');
+      expect(response.text).toContain('user: default');
     });
 
-    it('should use empty host for invalid URL', async () => {
+    it('should use default host for invalid URL', async () => {
       const response = await request(app)
         .get('/kubeconfig')
         .query({ url: 'not-a-valid-url', token: validToken });
 
       expect(response.status).toBe(200);
-      expect(response.text).toContain("name: ''");
+      expect(response.text).toContain('name: default');
     });
 
-    it('should use empty user for invalid JWT token', async () => {
+    it('should use default user for invalid JWT token', async () => {
       const response = await request(app)
         .get('/kubeconfig')
         .query({ url: validUrl, token: 'not-a-valid-jwt' });
 
       expect(response.status).toBe(200);
-      expect(response.text).toContain("user: ''");
+      expect(response.text).toContain('user: default');
     });
 
-    it('should use empty user when JWT is missing sub claim', async () => {
+    it('should use default user when JWT is missing sub claim', async () => {
       const response = await request(app)
         .get('/kubeconfig')
         .query({ url: validUrl, token: tokenWithoutSub });
 
       expect(response.status).toBe(200);
-      expect(response.text).toContain("user: ''");
+      expect(response.text).toContain('user: default');
     });
   });
 

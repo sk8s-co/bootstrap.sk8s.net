@@ -4,17 +4,17 @@ import kubeconfigYaml from './templates/kubeconfig.yaml';
 import { JWTPayload, decodeJwt } from 'jose';
 
 export const generateKubeconfig = (url: string, token: string): string => {
-  let host = '';
+  let host = 'default';
   try {
     host = new URL(url).hostname;
   } catch {
     // Ignore URL parsing errors
   }
 
-  let user = '';
+  let user = 'default';
   try {
     const payload = decodeJwt<JWTPayload>(token);
-    user = payload.sub || '';
+    user = payload.sub || 'default';
   } catch {
     // Ignore JWT decoding errors
   }
