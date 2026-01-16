@@ -3,6 +3,7 @@ import accepts from 'accepts';
 import { generateKubeletScript } from './kubelet';
 import { generateReadmeHtml } from './static';
 import { isBrowser } from './utils';
+import { generateKubeconfig } from './kubeconfig';
 
 /**
  * Router factory that returns configured Express router
@@ -67,6 +68,18 @@ export const router = () => {
     } catch (error) {
       next(error);
     }
+  });
+
+  r.get('/kubeconfig', (req: Request, res: Response) => {
+    const url = req.query.url as string | undefined;
+    const token = req.query.token as string | undefined;
+
+    const kubeconfig = generateKubeconfig(url || '', token || '');
+
+    res
+      .header('Content-Type', 'application/yaml')
+      .header('Content-Disposition', 'attachment; filename="kubeconfig.yaml"')
+      .send(kubeconfig);
   });
 
   return r;

@@ -17,7 +17,7 @@ const processKubeletYaml = (): string => {
 
 // Process kubeconfig.yaml: parse and stringify to ensure valid YAML
 // In the future, we'll look up the cluster server URL by X-Machine-Token
-const processKubeconfigYaml = (
+export const processKubeconfigYaml = (
   machineId: string,
   machineToken?: string,
 ): string => {
