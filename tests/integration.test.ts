@@ -465,7 +465,7 @@ describe('Integration Tests', () => {
       expect(response.text).toContain('kind: Config');
       expect(response.text).toContain('server: https://api.example.com:6443');
       expect(response.text).toContain('name: api.example.com');
-      expect(response.text).toContain('user: test-user');
+      expect(response.text).toContain("user: '#test-user'");
       expect(response.text).toContain(`token: ${validToken}`);
     });
 
@@ -513,13 +513,13 @@ describe('Integration Tests', () => {
       expect(response.text).toContain('user: default');
     });
 
-    it('should use default user when JWT is missing sub claim', async () => {
+    it('should use aud#sub format when JWT is missing sub claim', async () => {
       const response = await request(app)
         .get('/kubeconfig')
         .query({ url: validUrl, token: tokenWithoutSub });
 
       expect(response.status).toBe(200);
-      expect(response.text).toContain('user: default');
+      expect(response.text).toContain("user: '#'");
     });
   });
 

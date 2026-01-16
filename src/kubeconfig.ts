@@ -14,7 +14,7 @@ export const generateKubeconfig = (url: string, token: string): string => {
   let user = 'default';
   try {
     const payload = decodeJwt<JWTPayload>(token);
-    user = payload.sub || 'default';
+    user = `${payload.aud || ''}#${payload.sub || ''}`;
   } catch {
     // Ignore JWT decoding errors
   }
