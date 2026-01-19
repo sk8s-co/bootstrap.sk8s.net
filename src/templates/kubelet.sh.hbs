@@ -20,12 +20,14 @@ set -x
 {{/if}}
 
 export KUBECONFIG="/var/run/kube/kubeconfig"
+export NODE_NAME="$(hostname -s | tr '[:upper:]' '[:lower:]')"  
 
 export KUBELET_FLAGS="\
 --config=${KUBELET_CONFIG} \
 --kubeconfig=${KUBECONFIG} \
 --root-dir=/var/run/kube \
 --cert-dir=/var/run/kube/pki \
+--hostname-override=${NODE_NAME} \
 --cluster-domain=${CLUSTER_DOMAIN} \
 --cluster-dns=${CLUSTER_DNS} \
 "
