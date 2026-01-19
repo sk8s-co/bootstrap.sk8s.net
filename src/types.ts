@@ -46,6 +46,8 @@ export interface SanitizedScriptData {
 }
 
 export interface Kubeconfig {
+  apiVersion: 'v1';
+  kind: 'Config';
   'current-context'?: string;
   clusters: Array<{ name: string; cluster: { server: string } }>;
   users: Array<{

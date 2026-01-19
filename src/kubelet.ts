@@ -21,12 +21,11 @@ const kubeletYaml = processKubeletYaml();
 export const generateKubeletScript = (data: KubeletData): string => {
   let token: string | undefined = undefined;
 
-  if (data.machineId && data.machineToken) {
-    throw new Error('Not Implemented');
-  }
-
   if (data.authorization) {
     token = data.authorization.split(' ')[1];
+  } else if (data.machineToken) {
+    // Use machine token as fallback for kubeconfig generation
+    token = data.machineToken;
   }
 
   // URL and token are not used here

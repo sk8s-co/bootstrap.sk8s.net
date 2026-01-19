@@ -36,6 +36,8 @@ export const generateKubeconfig = (token?: string): Kubeconfig => {
   }
 
   return {
+    apiVersion: 'v1',
+    kind: 'Config',
     'current-context': context,
     contexts: [
       {

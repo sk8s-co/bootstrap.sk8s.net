@@ -415,7 +415,7 @@ describe('Integration Tests', () => {
       expect(response.text).not.toContain('[DEBUG]');
     });
 
-    it('should redact machine token in debug header but include in kubeconfig', async () => {
+    it('should redact machine token in debug header', async () => {
       const response = await request(app)
         .get('/')
         .set('Accept', 'text/x-shellscript')
@@ -426,8 +426,8 @@ describe('Integration Tests', () => {
       expect(response.status).toBe(200);
       expect(response.text).toContain('# DEBUG MODE ENABLED');
       expect(response.text).toContain('#   Machine Token: [REDACTED]');
-      // Token should appear in kubeconfig YAML
-      expect(response.text).toContain('token: secret-token-12345');
+      // Machine token is not a valid JWT, so kubeconfig uses defaults
+      expect(response.text).toContain('user: https://auth.sk8s.net/#');
     });
 
     it('should show machine token length in debug output', async () => {
@@ -444,17 +444,19 @@ describe('Integration Tests', () => {
   });
 
   describe('GET /kubeconfig', () => {
-    // Test JWT: {"alg":"none","typ":"JWT"}.{"sub":"test-user"}.
-    const validToken =
+    // JWT: {"alg":"none","typ":"JWT"}.{"iss":"https://auth.example.com/","aud":"https://api.example.com:6443","sub":"test-user"}.
+    const fullToken =
+      'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20vIiwiYXVkIjoiaHR0cHM6Ly9hcGkuZXhhbXBsZS5jb206NjQ0MyIsInN1YiI6InRlc3QtdXNlciJ9.';
+    // JWT: {"alg":"none","typ":"JWT"}.{"sub":"test-user"}.
+    const tokenWithSubOnly =
       'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIifQ.';
-    // Test JWT without sub claim: {"alg":"none","typ":"JWT"}.{}.
+    // JWT: {"alg":"none","typ":"JWT"}.{}.
     const tokenWithoutSub = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.e30.';
-    const validUrl = 'https://api.example.com:6443';
 
-    it('should return kubeconfig YAML with valid url and token', async () => {
+    it('should return kubeconfig YAML with full JWT claims', async () => {
       const response = await request(app)
         .get('/kubeconfig')
-        .query({ url: validUrl, token: validToken });
+        .query({ token: fullToken });
 
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toMatch(/application\/yaml/);
@@ -465,61 +467,57 @@ describe('Integration Tests', () => {
       expect(response.text).toContain('kind: Config');
       expect(response.text).toContain('server: https://api.example.com:6443');
       expect(response.text).toContain('name: api.example.com');
-      expect(response.text).toContain("user: '#test-user'");
-      expect(response.text).toContain(`token: ${validToken}`);
+      expect(response.text).toContain(
+        'user: https://auth.example.com/#test-user',
+      );
     });
 
-    it('should use default host when url is missing', async () => {
+    it('should use default issuer when iss claim is missing', async () => {
       const response = await request(app)
         .get('/kubeconfig')
-        .query({ token: validToken });
+        .query({ token: tokenWithSubOnly });
 
       expect(response.status).toBe(200);
-      expect(response.text).toContain('name: default');
+      // Default issuer is https://auth.sk8s.net/
+      expect(response.text).toContain('user: https://auth.sk8s.net/#test-user');
     });
 
-    it('should use default user when token is missing', async () => {
+    it('should use empty context when aud claim is missing', async () => {
       const response = await request(app)
         .get('/kubeconfig')
-        .query({ url: validUrl });
+        .query({ token: tokenWithSubOnly });
 
       expect(response.status).toBe(200);
-      expect(response.text).toContain('user: default');
+      // No aud claim means empty context/cluster name
+      expect(response.text).toContain("current-context: ''");
     });
 
-    it('should use defaults when both url and token are missing', async () => {
+    it('should use default issuer when token is missing', async () => {
       const response = await request(app).get('/kubeconfig');
 
       expect(response.status).toBe(200);
-      expect(response.text).toContain('name: default');
-      expect(response.text).toContain('user: default');
+      // Default issuer with empty subject
+      expect(response.text).toContain('user: https://auth.sk8s.net/#');
     });
 
-    it('should use default host for invalid URL', async () => {
+    it('should use default issuer for invalid JWT token', async () => {
       const response = await request(app)
         .get('/kubeconfig')
-        .query({ url: 'not-a-valid-url', token: validToken });
+        .query({ token: 'not-a-valid-jwt' });
 
       expect(response.status).toBe(200);
-      expect(response.text).toContain('name: default');
+      // Invalid token falls back to defaults
+      expect(response.text).toContain('user: https://auth.sk8s.net/#');
     });
 
-    it('should use default user for invalid JWT token', async () => {
+    it('should use issuer#empty format when JWT is missing sub claim', async () => {
       const response = await request(app)
         .get('/kubeconfig')
-        .query({ url: validUrl, token: 'not-a-valid-jwt' });
+        .query({ token: tokenWithoutSub });
 
       expect(response.status).toBe(200);
-      expect(response.text).toContain('user: default');
-    });
-
-    it('should use aud#sub format when JWT is missing sub claim', async () => {
-      const response = await request(app)
-        .get('/kubeconfig')
-        .query({ url: validUrl, token: tokenWithoutSub });
-
-      expect(response.status).toBe(200);
-      expect(response.text).toContain("user: '#'");
+      // Empty payload means default issuer with empty subject
+      expect(response.text).toContain('user: https://auth.sk8s.net/#');
     });
   });
 

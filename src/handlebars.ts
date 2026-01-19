@@ -6,4 +6,8 @@ Handlebars.registerHelper('env', (str: string) => {
   return str ? str.toUpperCase().replace(/-/g, '_') : '';
 });
 
+Handlebars.registerHelper('length', (str: string) => {
+  return str ? str.length : 0;
+});
+
 export default Handlebars;
