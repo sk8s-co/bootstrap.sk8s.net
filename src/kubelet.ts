@@ -1,9 +1,10 @@
 import * as yaml from 'js-yaml';
 import Handlebars from './handlebars';
-import { KubeletData, KubeletTemplateData, Kubeconfig } from './types';
+import { KubeletData, KubeletTemplateData } from './types';
 import templateSource from './templates/kubelet.sh.hbs';
 import kubeletYamlSource from './templates/kubelet.yaml';
-import kubeconfigYamlSource from './templates/kubeconfig.yaml';
+import { generateKubeconfig } from './kubeconfig';
+import { dump } from 'js-yaml';
 
 // Load and compile kubelet template once at startup
 // Template is bundled directly into the compiled output
@@ -15,57 +16,25 @@ const processKubeletYaml = (): string => {
   return yaml.dump(parsed);
 };
 
-// Process kubeconfig.yaml: parse and stringify to ensure valid YAML
-// In the future, we'll look up the cluster server URL by X-Machine-Token
-export const processKubeconfigYaml = (
-  machineId: string,
-  machineToken?: string,
-): string => {
-  const parsed = yaml.load(kubeconfigYamlSource) as Kubeconfig;
-
-  // TODO: Replace hardcoded values with backend lookup by machine token
-  // Hardcoded for now - will be replaced with dynamic lookup
-  const clusterUrl =
-    'https://be6pj2phtjzantmp5psnvn5cvy0gnhuh.lambda-url.us-east-1.on.aws/';
-
-  // Set cluster name, context name, and server URL to the cluster URL
-  parsed['current-context'] = clusterUrl;
-  parsed.clusters[0].name = clusterUrl;
-  parsed.clusters[0].cluster.server = clusterUrl;
-  parsed.contexts[0].name = clusterUrl;
-  parsed.contexts[0].context.cluster = clusterUrl;
-
-  // Set user name to machine ID and token to machine token
-  parsed.users[0].name = machineId;
-  parsed.users[0].user.token = machineToken || '';
-  parsed.contexts[0].context.user = machineId;
-
-  // Future implementation:
-  // if (machineToken) {
-  //   const clusterInfo = await lookupClusterByToken(machineToken);
-  //   parsed['current-context'] = clusterInfo.serverUrl;
-  //   parsed.clusters[0].name = clusterInfo.serverUrl;
-  //   parsed.clusters[0].cluster.server = clusterInfo.serverUrl;
-  //   parsed.contexts[0].name = clusterInfo.serverUrl;
-  //   parsed.contexts[0].context.cluster = clusterInfo.serverUrl;
-  //   parsed.users[0].user.token = clusterInfo.token;
-  // }
-
-  return yaml.dump(parsed);
-};
-
 const kubeletYaml = processKubeletYaml();
 
 export const generateKubeletScript = (data: KubeletData): string => {
-  // Generate kubeconfig with machine ID and token
-  const kubeconfigYaml = processKubeconfigYaml(
-    data.machineId,
-    data.machineToken,
-  );
+  let token: string | undefined = undefined;
+
+  if (data.machineId && data.machineToken) {
+    throw new Error('Not Implemented');
+  }
+
+  if (data.authorization) {
+    token = data.authorization.split(' ')[1];
+  }
+
+  // URL and token are not used here
+  const kubeconfig = generateKubeconfig(token);
 
   return template({
     ...data,
     kubeletYaml,
-    kubeconfigYaml,
+    kubeconfigYaml: dump(kubeconfig),
   });
 };

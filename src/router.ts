@@ -4,6 +4,7 @@ import { generateKubeletScript } from './kubelet';
 import { generateReadmeHtml } from './static';
 import { isBrowser } from './utils';
 import { generateKubeconfig } from './kubeconfig';
+import { dump } from 'js-yaml';
 
 /**
  * Router factory that returns configured Express router
@@ -13,20 +14,16 @@ export const router = () => {
 
   r.get('/kubeconfig', (req: Request, res: Response, next: NextFunction) => {
     try {
-      const url =
-        req.query.url?.toString() || req.header('x-url')?.toString() || '';
       const token =
         req.query.token?.toString() ||
         req.header('x-token')?.toString() ||
         req.header('authorization')?.toString().split(' ')[1] ||
-        '';
-
-      const kubeconfig = generateKubeconfig(url, token);
+        undefined;
 
       return res
         .header('Content-Type', 'application/yaml')
         .header('Content-Disposition', 'attachment; filename="kubeconfig.yaml"')
-        .send(kubeconfig);
+        .send(dump(generateKubeconfig(token)));
     } catch (error) {
       next(error);
     }
@@ -65,23 +62,18 @@ export const router = () => {
         throw new Error(`Unexpected accepted type: ${acceptedType}`);
       }
 
-      // sanitizedData is guaranteed to exist here due to middleware
-      const sanitizedData = req.sanitizedData!;
-
-      const baseData = {
-        timestamp: new Date().toISOString(),
-        ...sanitizedData,
-      };
-
       // Generate script based on component
       let script: string;
 
-      switch (sanitizedData.component) {
+      switch (req.sanitizedData?.component) {
         case 'dockerd-kubelet':
-          script = generateKubeletScript(baseData);
+          script = generateKubeletScript({
+            timestamp: new Date().toISOString(),
+            ...req.sanitizedData,
+          });
           break;
         default:
-          throw new Error(`Unknown component: ${sanitizedData.component}`);
+          throw new Error(`Unknown component: ${req.sanitizedData?.component}`);
       }
 
       res.setHeader('Content-Type', 'text/x-shellscript');
