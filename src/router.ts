@@ -29,6 +29,17 @@ export const router = () => {
     }
   });
 
+  r.get(
+    '/hello-world.sh',
+    (req: Request, res: Response, _next: NextFunction) => {
+      res.send(`
+        #!/bin/bash
+        set -Eeuo pipefail
+        echo "Hello, World!"
+      `);
+    },
+  );
+
   r.get('/', (req: Request, res: Response, next: NextFunction) => {
     try {
       // Check if the User-Agent is a browser
