@@ -6,6 +6,7 @@ import { isBrowser } from './utils';
 import { generateKubeconfig } from './kubeconfig';
 import { dump } from 'js-yaml';
 import helloWorldScript from './templates/hello-world.sh';
+import sleepScript from './templates/sleep.sh';
 
 /**
  * Router factory that returns configured Express router
@@ -42,6 +43,16 @@ export const router = () => {
         .send(helloWorldScript);
     },
   );
+
+  r.get('/sleep.sh', (req: Request, res: Response, _next: NextFunction) => {
+    res
+      .header('Content-Type', 'text/x-shellscript')
+      .header(
+        'Content-Disposition',
+        `attachment; filename="${req.path.slice(1)}"`,
+      )
+      .send(sleepScript);
+  });
 
   r.get('/', (req: Request, res: Response, next: NextFunction) => {
     try {
