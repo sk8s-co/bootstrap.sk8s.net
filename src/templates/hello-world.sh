@@ -1,4 +1,4 @@
 #!/bin/bash
-set -Eeuo pipefail
+set -euo pipefail
 exec >&2
 echo "Hello, World!"
