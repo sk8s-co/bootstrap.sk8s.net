@@ -13,5 +13,6 @@ export default defineConfig({
     '.md': 'text',
     '.css': 'text',
     '.yaml': 'text',
+    '.sh': 'text',
   },
 });
