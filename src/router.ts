@@ -5,8 +5,8 @@ import { generateReadmeHtml } from './static';
 import { isBrowser } from './utils';
 import { generateKubeconfig } from './kubeconfig';
 import { dump } from 'js-yaml';
-import helloWorldScript from './templates/hello-world.sh';
 import criDockerdScript from './templates/cri-dockerd.sh';
+import envScript from './templates/env.sh';
 
 /**
  * Router factory that returns configured Express router
@@ -44,18 +44,15 @@ export const router = () => {
     },
   );
 
-  r.get(
-    '/hello-world.sh',
-    (req: Request, res: Response, _next: NextFunction) => {
-      res
-        .header('Content-Type', 'text/x-shellscript')
-        .header(
-          'Content-Disposition',
-          `attachment; filename="${req.path.slice(1)}"`,
-        )
-        .send(helloWorldScript);
-    },
-  );
+  r.get('/env.sh', (req: Request, res: Response, _next: NextFunction) => {
+    res
+      .header('Content-Type', 'text/x-shellscript')
+      .header(
+        'Content-Disposition',
+        `attachment; filename="${req.path.slice(1)}"`,
+      )
+      .send(envScript);
+  });
 
   r.get('/', (req: Request, res: Response, next: NextFunction) => {
     try {
