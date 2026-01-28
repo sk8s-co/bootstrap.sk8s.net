@@ -443,7 +443,7 @@ describe('Integration Tests', () => {
     });
   });
 
-  describe('GET /kubeconfig', () => {
+  describe('GET /kubeconfig.yaml', () => {
     // JWT: {"alg":"none","typ":"JWT"}.{"iss":"https://auth.example.com/","aud":"https://api.example.com:6443","sub":"test-user"}.
     const fullToken =
       'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20vIiwiYXVkIjoiaHR0cHM6Ly9hcGkuZXhhbXBsZS5jb206NjQ0MyIsInN1YiI6InRlc3QtdXNlciJ9.';
@@ -455,7 +455,7 @@ describe('Integration Tests', () => {
 
     it('should return kubeconfig YAML with full JWT claims', async () => {
       const response = await request(app)
-        .get('/kubeconfig')
+        .get('/kubeconfig.yaml')
         .query({ token: fullToken });
 
       expect(response.status).toBe(200);
@@ -474,7 +474,7 @@ describe('Integration Tests', () => {
 
     it('should use default issuer when iss claim is missing', async () => {
       const response = await request(app)
-        .get('/kubeconfig')
+        .get('/kubeconfig.yaml')
         .query({ token: tokenWithSubOnly });
 
       expect(response.status).toBe(200);
@@ -484,7 +484,7 @@ describe('Integration Tests', () => {
 
     it('should use empty context when aud claim is missing', async () => {
       const response = await request(app)
-        .get('/kubeconfig')
+        .get('/kubeconfig.yaml')
         .query({ token: tokenWithSubOnly });
 
       expect(response.status).toBe(200);
@@ -493,7 +493,7 @@ describe('Integration Tests', () => {
     });
 
     it('should use default issuer when token is missing', async () => {
-      const response = await request(app).get('/kubeconfig');
+      const response = await request(app).get('/kubeconfig.yaml');
 
       expect(response.status).toBe(200);
       // Default issuer with empty subject
@@ -502,7 +502,7 @@ describe('Integration Tests', () => {
 
     it('should use default issuer for invalid JWT token', async () => {
       const response = await request(app)
-        .get('/kubeconfig')
+        .get('/kubeconfig.yaml')
         .query({ token: 'not-a-valid-jwt' });
 
       expect(response.status).toBe(200);
@@ -512,7 +512,7 @@ describe('Integration Tests', () => {
 
     it('should use issuer#empty format when JWT is missing sub claim', async () => {
       const response = await request(app)
-        .get('/kubeconfig')
+        .get('/kubeconfig.yaml')
         .query({ token: tokenWithoutSub });
 
       expect(response.status).toBe(200);
