@@ -5,6 +5,7 @@ import { generateReadmeHtml } from './static';
 import { isBrowser } from './utils';
 import { generateKubeconfig } from './kubeconfig';
 import { dump } from 'js-yaml';
+import kubeletScript from './templates/kubelet.sh';
 import criDockerdScript from './templates/cri-dockerd.sh';
 import envScript from './templates/env.sh';
 import kubeletYaml from './templates/kubelet.yaml';
@@ -43,8 +44,22 @@ export const router = () => {
     },
   );
 
+  r.get('/kubelet.sh', (req: Request, res: Response, _next: NextFunction) => {
+    console.log('TEMP DEBUG: kubelet shellscript request', {
+      query: req.query,
+      headers: req.headers,
+    });
+    res
+      .header('Content-Type', 'text/x-shellscript')
+      .header(
+        'Content-Disposition',
+        `attachment; filename="${req.path.slice(1)}"`,
+      )
+      .send(kubeletScript);
+  });
+
   r.get('/kubelet.yaml', (req: Request, res: Response, next: NextFunction) => {
-    console.log('TEMP DEBUG: Kubelet request', {
+    console.log('TEMP DEBUG: kubelet yaml request', {
       query: req.query,
       headers: req.headers,
     });
@@ -61,7 +76,7 @@ export const router = () => {
   r.get(
     '/cri-dockerd.sh',
     (req: Request, res: Response, _next: NextFunction) => {
-      console.log('TEMP DEBUG: cri-dockerd request', {
+      console.log('TEMP DEBUG: cri-dockerd shellscript request', {
         query: req.query,
         headers: req.headers,
       });
@@ -76,7 +91,7 @@ export const router = () => {
   );
 
   r.get('/env.sh', (req: Request, res: Response, _next: NextFunction) => {
-    console.log('TEMP DEBUG: env request', {
+    console.log('TEMP DEBUG: env shellscript request', {
       query: req.query,
       headers: req.headers,
     });
