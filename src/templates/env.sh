@@ -17,7 +17,7 @@ ENV="${ENV} WATCH_BACKOFF_MAX=\"30\""
 ENV="${ENV} WATCH_BACKOFF_RESET=\"120\""
 ENV="${ENV} WATCH_BACKOFF_FACTOR=\"2.0\""
 ENV="${ENV} WATCH_BACKOFF_JITTER=\"1.0\""
-ENV="${ENV} WATCH_BACKOFF_RESET_THRESHOLD=\"0\""
+ENV="${ENV} WATCH_BACKOFF_ON_EMPTY=\"false\""
 
 # Note: env.sh is intended to be subshelled
 #       so we use echo to output the exports

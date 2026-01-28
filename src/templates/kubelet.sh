@@ -7,15 +7,16 @@ while [ ! -S "/var/run/cri-dockerd.sock" ]; do
 done
 echo "cri-dockerd socket is ready."
 
-RUN +env +raw https://bootstrap.sk8s.net/kubelet.yaml > ${KUBELET_CONFIG}
-RUN +env +raw https://bootstrap.sk8s.net/kubeconfig.yaml > ${KUBECONFIG}
+RUN +env +raw https://bootstrap.sk8s.net/kubelet.yaml > "${KUBELET_CONFIG}"
+RUN +env +raw https://bootstrap.sk8s.net/kubeconfig.yaml > "${KUBECONFIG}"
 
 echo "Starting kubelet..."
 exec /srv/kubelet \
---config=${KUBELET_CONFIG} \
---kubeconfig=${KUBECONFIG} \
+--config="${KUBELET_CONFIG}" \
+--kubeconfig="${KUBECONFIG}" \
 --root-dir=/var/run/kube \
 --cert-dir=/var/run/kube/pki \
---hostname-override=${NODE_NAME} \
---cluster-domain=${CLUSTER_DOMAIN} \
---cluster-dns=${CLUSTER_DNS}
+--hostname-override="${NODE_NAME}" \
+--cluster-domain="${CLUSTER_DOMAIN}" \
+--cluster-dns="${CLUSTER_DNS}" \
+"$@"
