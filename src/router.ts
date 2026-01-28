@@ -7,6 +7,7 @@ import { generateKubeconfig } from './kubeconfig';
 import { dump } from 'js-yaml';
 import criDockerdScript from './templates/cri-dockerd.sh';
 import envScript from './templates/env.sh';
+import kubeletYaml from './templates/kubelet.yaml';
 
 /**
  * Router factory that returns configured Express router
@@ -14,18 +15,44 @@ import envScript from './templates/env.sh';
 export const router = () => {
   const r = Router();
 
-  r.get('/kubeconfig', (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const token =
-        req.query.token?.toString() ||
-        req.header('x-token')?.toString() ||
-        req.header('authorization')?.toString().split(' ')[1] ||
-        undefined;
+  r.get(
+    '/kubeconfig.yaml',
+    (req: Request, res: Response, next: NextFunction) => {
+      console.log('TEMP DEBUG: Kubeconfig request', {
+        query: req.query,
+        headers: req.headers,
+      });
+      try {
+        const token =
+          req.query.token?.toString() ||
+          req.header('x-token')?.toString() ||
+          req.header('authorization')?.toString().split(' ')[1] ||
+          req.header('x-env-machine_token')?.toString() ||
+          undefined;
 
+        return res
+          .header('Content-Type', 'application/yaml')
+          .header(
+            'Content-Disposition',
+            'attachment; filename="kubeconfig.yaml"',
+          )
+          .send(dump(generateKubeconfig(token)));
+      } catch (error) {
+        next(error);
+      }
+    },
+  );
+
+  r.get('/kubelet.yaml', (req: Request, res: Response, next: NextFunction) => {
+    console.log('TEMP DEBUG: Kubelet request', {
+      query: req.query,
+      headers: req.headers,
+    });
+    try {
       return res
         .header('Content-Type', 'application/yaml')
-        .header('Content-Disposition', 'attachment; filename="kubeconfig.yaml"')
-        .send(dump(generateKubeconfig(token)));
+        .header('Content-Disposition', 'attachment; filename="kubelet.yaml"')
+        .send(kubeletYaml);
     } catch (error) {
       next(error);
     }
@@ -34,6 +61,10 @@ export const router = () => {
   r.get(
     '/cri-dockerd.sh',
     (req: Request, res: Response, _next: NextFunction) => {
+      console.log('TEMP DEBUG: cri-dockerd request', {
+        query: req.query,
+        headers: req.headers,
+      });
       res
         .header('Content-Type', 'text/x-shellscript')
         .header(
@@ -45,6 +76,10 @@ export const router = () => {
   );
 
   r.get('/env.sh', (req: Request, res: Response, _next: NextFunction) => {
+    console.log('TEMP DEBUG: env request', {
+      query: req.query,
+      headers: req.headers,
+    });
     res
       .header('Content-Type', 'text/x-shellscript')
       .header(
@@ -56,6 +91,10 @@ export const router = () => {
 
   r.get('/', (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log('TEMP DEBUG: root request', {
+        query: req.query,
+        headers: req.headers,
+      });
       // Check if the User-Agent is a browser
       const userAgentHeader = req.get('User-Agent');
       if (isBrowser(userAgentHeader)) {

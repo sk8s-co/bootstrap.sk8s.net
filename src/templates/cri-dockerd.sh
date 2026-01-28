@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eu
 
 echo "Waiting for docker socket..."
 while [ ! -S "/var/run/docker.sock" ]; do
