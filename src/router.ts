@@ -7,6 +7,7 @@ import { generateKubeconfig } from './kubeconfig';
 import { dump } from 'js-yaml';
 import kubeletScript from './templates/kubelet.sh';
 import criDockerdScript from './templates/cri-dockerd.sh';
+import cloudflaredScript from './templates/cloudflared.sh';
 import envScript from './templates/env.sh';
 import kubeletYaml from './templates/kubelet.yaml';
 
@@ -103,6 +104,23 @@ export const router = () => {
       )
       .send(envScript);
   });
+
+  r.get(
+    '/cloudflared.sh',
+    (req: Request, res: Response, _next: NextFunction) => {
+      console.log('TEMP DEBUG: cloudflared shellscript request', {
+        query: req.query,
+        headers: req.headers,
+      });
+      res
+        .header('Content-Type', 'text/x-shellscript')
+        .header(
+          'Content-Disposition',
+          `attachment; filename="${req.path.slice(1)}"`,
+        )
+        .send(cloudflaredScript);
+    },
+  );
 
   r.get('/', (req: Request, res: Response, next: NextFunction) => {
     try {
