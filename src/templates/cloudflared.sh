@@ -39,5 +39,6 @@ echo "" >&2
 exec /srv/cloudflared \
 tunnel \
 --metrics="localhost:${METRICS_PORT}" \
+--no-tls-verify \
 --url="${URL}" \
 "$@"

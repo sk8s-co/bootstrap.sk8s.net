@@ -7,12 +7,6 @@ while [ ! -S "/var/run/cri-dockerd.sock" ]; do
 done
 echo "cri-dockerd socket is ready."
 
-echo "Waiting for external hostname..."
-while [ ! -f "/var/run/${KUBELET_PORT}/hostname" ]; do
-    sleep 1
-done
-echo "External hostname is ready."
-
 RUN +env +raw https://bootstrap.sk8s.net/kubelet.yaml > "${KUBELET_CONFIG}"
 RUN +env +raw https://bootstrap.sk8s.net/kubeconfig.yaml > "${KUBECONFIG}"
 
@@ -25,7 +19,7 @@ CLUSTER_DNS="${CLUSTER_DNS}"
 # DEVNOTE: KUBELET_EXTERNAL_DNS is a custom environment variable
 #          that was added to our patched version of kubelet.
 #          It sets the ExternalDNS field in the Node status.
-export KUBELET_EXTERNAL_DNS="$(cat /var/run/${KUBELET_PORT}/hostname)"
+export KUBELET_EXTERNAL_DNS=$(until cat "/var/run/${KUBELET_PORT}/hostname" 2>/dev/null; do sleep 1; done)
 
 # Pretty print the execution
 echo "kubelet.sh (bootstrap.sk8s.net) >>>" >&2
