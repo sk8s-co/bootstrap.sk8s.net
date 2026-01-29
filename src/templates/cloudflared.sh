@@ -9,7 +9,7 @@ fi
 PORT="$1"
 shift 1
 
-URL="http://127.0.0.1:${PORT}"
+URL="https://127.0.0.1:${PORT}"
 # Deterministic port in ephemeral range (49152-65535) based on URL
 METRICS_PORT=$(echo "${URL}" | cksum | awk '{print ($1 % 16384) + 49152}')
 
