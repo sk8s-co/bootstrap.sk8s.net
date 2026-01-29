@@ -5,7 +5,7 @@ ENV="${ENV} OIDC_AZP=CkbKDkUMWwmj4Ebi5GrO7X71LY57QRiU"
 ENV="${ENV} OIDC_SCP=offline_access"
 
 case "${USER_AGENT:-}" in
-    dockerd-kubelet/*)
+    kubelet-dockerd/*)
         ENV="${ENV} CLUSTER_DNS=$(awk '/^nameserver/ {print $2; exit}' /etc/resolv.conf)"
         ENV="${ENV} CLUSTER_DOMAIN=sk8s.net"
         ENV="${ENV} KUBECONFIG=/var/run/kube/kubeconfig"
