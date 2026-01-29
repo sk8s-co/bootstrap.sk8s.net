@@ -43,6 +43,7 @@ echo "env.sh (bootstrap.sk8s.net) >>>" >&2
 echo "  User-Agent: ${USER_AGENT:-}" >&2
 echo "  Environment:" >&2
 printf "%s\n" "${ENV}" | tr ' ' '\n' | sort -u | awk -F= '{printf "    %-25s %s\n", $1, $2}' >&2
+echo "" >&2
 
 # Note: env.sh is intended to be subshelled
 #       so we use echo to output the exports
