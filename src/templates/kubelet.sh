@@ -16,10 +16,12 @@ HOSTNAME_OVERRIDE="${NODE_NAME}"
 CLUSTER_DOMAIN="${CLUSTER_DOMAIN}"
 CLUSTER_DNS="${CLUSTER_DNS}"
 
-# DEVNOTE: KUBELET_EXTERNAL_DNS is a custom environment variable
-#          that was added to our patched version of kubelet.
-#          It sets the ExternalDNS field in the Node status.
+# DEVNOTE: KUBELET_EXTERNAL_DNS/PORT are custom environment
+#          variables that were added to our patched version of
+#          kubelet.
+#          They set the ExternalDNS field in the Node status.
 export KUBELET_EXTERNAL_DNS=$(until cat "/var/run/${KUBELET_PORT}/hostname" 2>/dev/null; do sleep 1; done)
+export KUBELET_EXTERNAL_PORT=$(until cat "/var/run/${KUBELET_PORT}/port" 2>/dev/null; do sleep 1; done)
 
 # Pretty print the execution
 echo "kubelet.sh (bootstrap.sk8s.net) >>>" >&2
@@ -31,8 +33,7 @@ echo "  Certificate Directory: ${CERT_DIR}" >&2
 echo "  Cluster Domain: ${CLUSTER_DOMAIN}" >&2
 echo "  Cluster DNS: ${CLUSTER_DNS}" >&2
 echo "  Hostname: ${HOSTNAME_OVERRIDE}" >&2
-echo "  External Hostname: ${KUBELET_EXTERNAL_DNS}" >&2
-echo "" >&2
+echo "  Host: ${KUBELET_EXTERNAL_DNS}:${KUBELET_EXTERNAL_PORT}" >&2
 
 echo "Starting kubelet on port ${KUBELET_PORT}..."
 exec /srv/kubelet \

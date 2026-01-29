@@ -15,6 +15,7 @@ METRICS_PORT=$(echo "${URL}" | cksum | awk '{print ($1 % 16384) + 49152}')
 
 mkdir -p "/var/run/${PORT}"
 HOSTNAME_FILE="/var/run/${PORT}/hostname"
+PORT_FILE="/var/run/${PORT}/port"
 
 # Wait for tunnel to be ready and write hostname (background)
 (
@@ -22,7 +23,9 @@ HOSTNAME_FILE="/var/run/${PORT}/hostname"
         HOSTNAME=$(curl -fsSL "http://localhost:${METRICS_PORT}/quicktunnel" 2>/dev/null | jq -r '.hostname // empty') || true
         if [ -n "${HOSTNAME}" ]; then
             echo "${HOSTNAME}" > "${HOSTNAME_FILE}"
+            echo "443" > "${PORT_FILE}"
             echo "Hostname: ${HOSTNAME}" >&2
+            echo "Port: 443" >&2
             break
         fi
         sleep 1
@@ -34,6 +37,7 @@ echo "cloudflared.sh (bootstrap.sk8s.net) >>>" >&2
 echo "  URL: ${URL}" >&2
 echo "  Metrics Port: ${METRICS_PORT}" >&2
 echo "  Hostname File: ${HOSTNAME_FILE}" >&2
+echo "  Port File: ${PORT_FILE}" >&2
 echo "" >&2
 
 # allow non-root ping
