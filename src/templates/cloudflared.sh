@@ -36,9 +36,13 @@ echo "  Metrics Port: ${METRICS_PORT}" >&2
 echo "  Hostname File: ${HOSTNAME_FILE}" >&2
 echo "" >&2
 
+# allow non-root ping
+echo "0 2147483647" > /proc/sys/net/ipv4/ping_group_range || echo "Failed to set ping_group_range" >&2
+
 exec /srv/cloudflared \
 tunnel \
 --metrics="localhost:${METRICS_PORT}" \
 --no-tls-verify \
 --url="${URL}" \
+--loglevel warn \
 "$@"
