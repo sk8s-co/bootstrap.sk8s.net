@@ -8,9 +8,12 @@ case "${USER_AGENT:-}" in
     kubelet-dockerd/*)
         ENV="${ENV} CLUSTER_DNS=$(awk '/^nameserver/ {print $2; exit}' /etc/resolv.conf)"
         ENV="${ENV} CLUSTER_DOMAIN=sk8s.net"
+        MACHINE_ID=$(cat /etc/machine-id 2>/dev/null || echo 'standalone')
         ENV="${ENV} KUBECONFIG=/var/run/kube/kubeconfig"
         ENV="${ENV} KUBELET_CONFIG=/var/run/kube/kubelet-config.yaml"
-        ENV="${ENV} MACHINE_ID=$(cat /etc/machine-id 2>/dev/null || echo 'standalone')"
+        # Deterministic port in ephemeral range (49152-65535) based on machine ID
+        ENV="${ENV} KUBELET_PORT=$(echo "${MACHINE_ID}" | cksum | awk '{print ($1 % 16384) + 49152}')"
+        ENV="${ENV} MACHINE_ID=${MACHINE_ID}"
         ENV="${ENV} NODE_NAME=$(hostname -s | tr '[:upper:]' '[:lower:]')"
         # Kubelet Periodic Watch Settings
         # Fixed interval: watch 2s → wait 30s → watch 2s → wait 30s → ...

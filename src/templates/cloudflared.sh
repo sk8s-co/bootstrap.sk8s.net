@@ -10,7 +10,8 @@ PORT="$1"
 shift 1
 
 URL="http://127.0.0.1:${PORT}"
-METRICS_PORT=$(echo "${URL}" | cksum | awk '{print ($1 % 10000) + 2000}')
+# Deterministic port in ephemeral range (49152-65535) based on URL
+METRICS_PORT=$(echo "${URL}" | cksum | awk '{print ($1 % 16384) + 49152}')
 
 mkdir -p "/var/run/${PORT}"
 HOSTNAME_FILE="/var/run/${PORT}/hostname"

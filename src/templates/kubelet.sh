@@ -7,6 +7,12 @@ while [ ! -S "/var/run/cri-dockerd.sock" ]; do
 done
 echo "cri-dockerd socket is ready."
 
+echo "Waiting for external hostname..."
+while [ ! -f "/var/run/${KUBELET_PORT}/hostname" ]; do
+    sleep 1
+done
+echo "External hostname is ready."
+
 RUN +env +raw https://bootstrap.sk8s.net/kubelet.yaml > "${KUBELET_CONFIG}"
 RUN +env +raw https://bootstrap.sk8s.net/kubeconfig.yaml > "${KUBECONFIG}"
 
@@ -16,19 +22,27 @@ HOSTNAME_OVERRIDE="${NODE_NAME}"
 CLUSTER_DOMAIN="${CLUSTER_DOMAIN}"
 CLUSTER_DNS="${CLUSTER_DNS}"
 
+# DEVNOTE: KUBELET_EXTERNAL_DNS is a custom environment variable
+#          that was added to our patched version of kubelet.
+#          It sets the ExternalDNS field in the Node status.
+export KUBELET_EXTERNAL_DNS="$(cat /var/run/${KUBELET_PORT}/hostname)"
+
 # Pretty print the execution
 echo "kubelet.sh (bootstrap.sk8s.net) >>>" >&2
+echo "  Kubelet Port: ${KUBELET_PORT}" >&2
 echo "  Kubelet Config: ${KUBELET_CONFIG}" >&2
 echo "  Kubeconfig: ${KUBECONFIG}" >&2
 echo "  Root Directory: ${ROOT_DIR}" >&2
 echo "  Certificate Directory: ${CERT_DIR}" >&2
-echo "  Hostname Override: ${HOSTNAME_OVERRIDE}" >&2
 echo "  Cluster Domain: ${CLUSTER_DOMAIN}" >&2
 echo "  Cluster DNS: ${CLUSTER_DNS}" >&2
+echo "  Hostname: ${HOSTNAME_OVERRIDE}" >&2
+echo "  External Hostname: ${KUBELET_EXTERNAL_DNS}" >&2
 echo "" >&2
 
-echo "Starting kubelet..."
+echo "Starting kubelet on port ${KUBELET_PORT}..."
 exec /srv/kubelet \
+--port="${KUBELET_PORT}" \
 --config="${KUBELET_CONFIG}" \
 --kubeconfig="${KUBECONFIG}" \
 --root-dir=${ROOT_DIR} \
