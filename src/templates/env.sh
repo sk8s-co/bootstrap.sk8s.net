@@ -1,23 +1,48 @@
 #!/bin/sh
-ENV=""
-ENV="${ENV} CLUSTER_DNS=$(awk '/^nameserver/ {print $2; exit}' /etc/resolv.conf)"
-ENV="${ENV} CLUSTER_DOMAIN=docker.internal"
-ENV="${ENV} KUBECONFIG=/var/run/kube/kubeconfig"
-ENV="${ENV} KUBELET_CONFIG=/var/run/kube/kubelet-config.yaml"
-ENV="${ENV} MACHINE_ID=$(cat /etc/machine-id)"
-ENV="${ENV} NODE_NAME=$(hostname -s | tr '[:upper:]' '[:lower:]')"
-ENV="${ENV} OIDC_ISS=https://auth.sk8s.net/"
+ENV="OIDC_ISS=https://auth.sk8s.net/"
 ENV="${ENV} OIDC_AUD=https://sk8s-co.us.auth0.com/userinfo"
 ENV="${ENV} OIDC_AZP=CkbKDkUMWwmj4Ebi5GrO7X71LY57QRiU"
 ENV="${ENV} OIDC_SCP=offline_access"
-ENV="${ENV} WATCH_MIN_TIMEOUT=\"300\""
-ENV="${ENV} WATCH_MAX_TIMEOUT=\"600\""
-ENV="${ENV} WATCH_BACKOFF_INIT=\"1\""
-ENV="${ENV} WATCH_BACKOFF_MAX=\"30\""
-ENV="${ENV} WATCH_BACKOFF_RESET=\"120\""
-ENV="${ENV} WATCH_BACKOFF_FACTOR=\"2.0\""
-ENV="${ENV} WATCH_BACKOFF_JITTER=\"1.0\""
-ENV="${ENV} WATCH_BACKOFF_ON_EMPTY=\"false\""
+
+case "${USER_AGENT:-}" in
+    dockerd-kubelet/*)
+        ENV="${ENV} CLUSTER_DNS=$(awk '/^nameserver/ {print $2; exit}' /etc/resolv.conf)"
+        ENV="${ENV} CLUSTER_DOMAIN=sk8s.net"
+        ENV="${ENV} KUBECONFIG=/var/run/kube/kubeconfig"
+        ENV="${ENV} KUBELET_CONFIG=/var/run/kube/kubelet-config.yaml"
+        ENV="${ENV} MACHINE_ID=$(cat /etc/machine-id 2>/dev/null || echo 'standalone')"
+        ENV="${ENV} NODE_NAME=$(hostname -s | tr '[:upper:]' '[:lower:]')"
+        # Kubelet Periodic Watch Settings
+        # Fixed interval: watch 2s → wait 30s → watch 2s → wait 30s → ...
+        # Worst-case reaction time: ~32 seconds
+        ENV="${ENV} WATCH_MIN_TIMEOUT=\"2\""
+        ENV="${ENV} WATCH_MAX_TIMEOUT=\"2\""
+        ENV="${ENV} WATCH_BACKOFF_INIT=\"30\""
+        ENV="${ENV} WATCH_BACKOFF_MAX=\"30\""
+        ENV="${ENV} WATCH_BACKOFF_RESET=\"30\""
+        ENV="${ENV} WATCH_BACKOFF_FACTOR=\"1.0\""
+        ENV="${ENV} WATCH_BACKOFF_JITTER=\"1.0\""
+        ENV="${ENV} WATCH_BACKOFF_ON_EMPTY=\"true\""
+    ;;
+    *)
+        # Kubernetes Default Behavior
+        # watch 5-10min → (reconnect) → watch 5-10min → ... (backoff only on errors)
+        ENV="${ENV} WATCH_MIN_TIMEOUT=\"300\""
+        ENV="${ENV} WATCH_MAX_TIMEOUT=\"600\""
+        ENV="${ENV} WATCH_BACKOFF_INIT=\"1\""
+        ENV="${ENV} WATCH_BACKOFF_MAX=\"30\""
+        ENV="${ENV} WATCH_BACKOFF_RESET=\"120\""
+        ENV="${ENV} WATCH_BACKOFF_FACTOR=\"2.0\""
+        ENV="${ENV} WATCH_BACKOFF_JITTER=\"1.0\""
+        ENV="${ENV} WATCH_BACKOFF_ON_EMPTY=\"false\""
+    ;;
+esac
+
+# Pretty print the environment variables
+echo "env.sh (bootstrap.sk8s.net) >>>" >&2
+echo "  User-Agent: ${USER_AGENT:-}" >&2
+echo "  Environment:" >&2
+printf "%s\n" "${ENV}" | tr ' ' '\n' | sort -u | awk -F= '{printf "    %-25s %s\n", $1, $2}' >&2
 
 # Note: env.sh is intended to be subshelled
 #       so we use echo to output the exports
