@@ -286,7 +286,10 @@ kubectl config set-credentials $KUBE_APISERVER \\
     --exec-arg=--oidc-issuer-url=https://auth.sk8s.net/ \\
     --exec-arg=--oidc-client-id=CkbKDkUMWwmj4Ebi5GrO7X71LY57QRiU \\
     --exec-arg=--oidc-use-access-token=true \\
-    --exec-arg=--oidc-extra-scope=offline_access,system:authenticated,system:masters,system:nodes \\
+    --exec-arg=--oidc-extra-scope=offline_access \\
+    --exec-arg=--oidc-extra-scope=system:authenticated \\
+    --exec-arg=--oidc-extra-scope=system:masters \\
+    --exec-arg=--oidc-extra-scope=system:nodes \\
     --exec-arg=--oidc-auth-request-extra-params=audience=$KUBE_APISERVER
 CMD
 
