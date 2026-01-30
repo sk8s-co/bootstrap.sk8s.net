@@ -329,6 +329,7 @@ docker run -d \\
     --network host \\
     --pid host \\
     --ipc host \\
+    --platform linux/amd64 \\
     -v /etc/machine-id:/etc/machine-id:ro \\
     -v /var/run/kube:/var/run/kube \\
     -v /var/run/docker.sock:/var/run/docker.sock \\
