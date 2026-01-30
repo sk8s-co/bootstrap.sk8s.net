@@ -223,7 +223,7 @@ prompt_configuration() {
         echo -e "  ${DIM}(e.g., https://xxxxxx.lambda-url.us-east-1.on.aws)${RESET}"
         echo ""
         printf "  ${BOLD}API Server:${RESET} "
-        read -r KUBE_APISERVER
+        read -r KUBE_APISERVER < /dev/tty
         
         if [ -z "$KUBE_APISERVER" ]; then
             error "API server URL is required"
