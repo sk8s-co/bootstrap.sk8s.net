@@ -10,6 +10,8 @@ import criDockerdScript from './templates/cri-dockerd.sh';
 import cloudflaredScript from './templates/cloudflared.sh';
 import envScript from './templates/env.sh';
 import kubeletYaml from './templates/kubelet.yaml';
+import installSh from './static/install.sh';
+import etag from 'etag';
 
 /**
  * Router factory that returns configured Express router
@@ -17,13 +19,27 @@ import kubeletYaml from './templates/kubelet.yaml';
 export const router = () => {
   const r = Router();
 
+  r.get('/install.sh', (req: Request, res: Response, _next: NextFunction) => {
+    const maxAge = 300; // 5 minutes in seconds
+    const script = installSh;
+    const eTag = etag(script);
+
+    // Check for ETag match
+    if (req.header('If-None-Match') === eTag) {
+      return res.status(304).end();
+    }
+
+    res
+      .header('Content-Type', 'text/x-sh')
+      .header('ETag', eTag)
+      .header('Cache-Control', `no-cache, max-age=${maxAge}`)
+      .header('Expires', new Date(Date.now() + maxAge * 1000).toUTCString())
+      .send(script);
+  });
+
   r.get(
     '/kubeconfig.yaml',
     (req: Request, res: Response, next: NextFunction) => {
-      console.log('TEMP DEBUG: Kubeconfig request', {
-        query: req.query,
-        headers: req.headers,
-      });
       try {
         const token =
           req.query.token?.toString() ||
@@ -46,10 +62,6 @@ export const router = () => {
   );
 
   r.get('/kubelet.sh', (req: Request, res: Response, _next: NextFunction) => {
-    console.log('TEMP DEBUG: kubelet shellscript request', {
-      query: req.query,
-      headers: req.headers,
-    });
     res
       .header('Content-Type', 'text/x-shellscript')
       .header(
@@ -60,10 +72,6 @@ export const router = () => {
   });
 
   r.get('/kubelet.yaml', (req: Request, res: Response, next: NextFunction) => {
-    console.log('TEMP DEBUG: kubelet yaml request', {
-      query: req.query,
-      headers: req.headers,
-    });
     try {
       return res
         .header('Content-Type', 'application/yaml')
@@ -77,10 +85,6 @@ export const router = () => {
   r.get(
     '/cri-dockerd.sh',
     (req: Request, res: Response, _next: NextFunction) => {
-      console.log('TEMP DEBUG: cri-dockerd shellscript request', {
-        query: req.query,
-        headers: req.headers,
-      });
       res
         .header('Content-Type', 'text/x-shellscript')
         .header(
@@ -92,10 +96,6 @@ export const router = () => {
   );
 
   r.get('/env.sh', (req: Request, res: Response, _next: NextFunction) => {
-    console.log('TEMP DEBUG: env shellscript request', {
-      query: req.query,
-      headers: req.headers,
-    });
     res
       .header('Content-Type', 'text/x-shellscript')
       .header(
@@ -108,10 +108,6 @@ export const router = () => {
   r.get(
     '/cloudflared.sh',
     (req: Request, res: Response, _next: NextFunction) => {
-      console.log('TEMP DEBUG: cloudflared shellscript request', {
-        query: req.query,
-        headers: req.headers,
-      });
       res
         .header('Content-Type', 'text/x-shellscript')
         .header(
@@ -124,10 +120,6 @@ export const router = () => {
 
   r.get('/', (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log('TEMP DEBUG: root request', {
-        query: req.query,
-        headers: req.headers,
-      });
       // Check if the User-Agent is a browser
       const userAgentHeader = req.get('User-Agent');
       if (isBrowser(userAgentHeader)) {

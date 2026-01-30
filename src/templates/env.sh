@@ -1,8 +1,28 @@
 #!/bin/sh
-ENV="OIDC_ISS=https://auth.sk8s.net/"
-ENV="${ENV} OIDC_AUD=https://sk8s-co.us.auth0.com/userinfo"
-ENV="${ENV} OIDC_AZP=CkbKDkUMWwmj4Ebi5GrO7X71LY57QRiU"
-ENV="${ENV} OIDC_SCP=offline_access"
+set -e
+
+export OIDC_ISS="https://auth.sk8s.net/"
+export OIDC_AZP="CkbKDkUMWwmj4Ebi5GrO7X71LY57QRiU"
+export OIDC_SCP="offline_access,system:authenticated,system:masters,system:nodes"
+export OIDC_AUD="${OIDC_AUD:-}"
+
+ENV="OIDC_ISS=${OIDC_ISS}"
+ENV="${ENV} OIDC_AZP=${OIDC_AZP}"
+ENV="${ENV} OIDC_SCP=${OIDC_SCP}"
+ENV="${ENV} OIDC_AUD=${OIDC_AUD:-}"
+
+# If OIDC_AUD is set, run kubectl oidc-login
+if [ -n "${OIDC_AUD:-}" ]; then
+    OIDC_LOGIN=$(kubectl oidc-login get-token \
+        --oidc-use-access-token=true \
+        --oidc-issuer-url="${OIDC_ISS}" \
+        --oidc-client-id="${OIDC_AZP}" \
+        --oidc-extra-scope="${OIDC_SCP}" \
+        --oidc-auth-request-extra-params="audience=${OIDC_AUD}" \
+    2>/dev/null) || OIDC_LOGIN=""
+    MACHINE_TOKEN=$(printf '%s' "${OIDC_LOGIN}" | jq -r '.status.token // empty')
+    ENV="${ENV} MACHINE_TOKEN=${MACHINE_TOKEN}"
+fi
 
 case "${USER_AGENT:-}" in
     kubelet-dockerd/*)
@@ -14,7 +34,7 @@ case "${USER_AGENT:-}" in
         # Deterministic port in ephemeral range (49152-65535) based on machine ID
         ENV="${ENV} KUBELET_PORT=$(echo "${MACHINE_ID}" | cksum | awk '{print ($1 % 16384) + 49152}')"
         ENV="${ENV} MACHINE_ID=${MACHINE_ID}"
-        ENV="${ENV} NODE_NAME=$(hostname -s | tr '[:upper:]' '[:lower:]')"
+        ENV="${ENV} NODE_NAME=$(hostname | cut -d. -f1 | tr '[:upper:]' '[:lower:]')"
         # Kubelet Periodic Watch Settings
         # Fixed interval: watch 2s → wait 30s → watch 2s → wait 30s → ...
         # Worst-case reaction time: ~32 seconds

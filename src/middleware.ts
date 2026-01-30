@@ -23,6 +23,11 @@ const errorTemplate = Handlebars.compile<ErrorData>(errorTemplateSource);
  */
 export const sanitized = () => {
   return (req: Request, _res: Response, next: NextFunction) => {
+    console.log('!!! DEBUG: Entering middleware !!!', {
+      path: req.path,
+      method: req.method,
+      headers: req.headers,
+    });
     try {
       // Only sanitize for the bootstrap route
       if (req.path !== '/') {
