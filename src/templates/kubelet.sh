@@ -7,6 +7,18 @@ while [ ! -S "/var/run/cri-dockerd.sock" ]; do
 done
 echo "cri-dockerd socket is ready."
 
+# If OIDC_AUD is set, run kubectl oidc-login
+if [ -n "${OIDC_AUD:-}" ]; then
+    OIDC_LOGIN=$(kubectl oidc-login get-token \
+        --oidc-use-access-token=true \
+        --oidc-issuer-url="${OIDC_ISS}" \
+        --oidc-client-id="${OIDC_AZP}" \
+        --oidc-extra-scope="${OIDC_SCP}" \
+        --oidc-auth-request-extra-params="audience=${OIDC_AUD}" \
+    2>/dev/null) || OIDC_LOGIN=""
+    export MACHINE_TOKEN=$(printf '%s' "${OIDC_LOGIN}" | jq -r '.status.token // empty')
+fi
+
 RUN +env +raw https://bootstrap.sk8s.net/kubelet.yaml > "${KUBELET_CONFIG}"
 RUN +env +raw https://bootstrap.sk8s.net/kubeconfig.yaml > "${KUBECONFIG}"
 

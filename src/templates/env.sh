@@ -9,20 +9,7 @@ export OIDC_AUD="${OIDC_AUD:-}"
 ENV="OIDC_ISS=${OIDC_ISS}"
 ENV="${ENV} OIDC_AZP=${OIDC_AZP}"
 ENV="${ENV} OIDC_SCP=${OIDC_SCP}"
-ENV="${ENV} OIDC_AUD=${OIDC_AUD:-}"
-
-# If OIDC_AUD is set, run kubectl oidc-login
-if [ -n "${OIDC_AUD:-}" ]; then
-    OIDC_LOGIN=$(kubectl oidc-login get-token \
-        --oidc-use-access-token=true \
-        --oidc-issuer-url="${OIDC_ISS}" \
-        --oidc-client-id="${OIDC_AZP}" \
-        --oidc-extra-scope="${OIDC_SCP}" \
-        --oidc-auth-request-extra-params="audience=${OIDC_AUD}" \
-    2>/dev/null) || OIDC_LOGIN=""
-    MACHINE_TOKEN=$(printf '%s' "${OIDC_LOGIN}" | jq -r '.status.token // empty')
-    ENV="${ENV} MACHINE_TOKEN=${MACHINE_TOKEN}"
-fi
+ENV="${ENV} OIDC_AUD=${OIDC_AUD}"
 
 case "${USER_AGENT:-}" in
     kubelet-dockerd/*)
