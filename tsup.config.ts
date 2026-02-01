@@ -14,5 +14,6 @@ export default defineConfig({
     '.css': 'text',
     '.yaml': 'text',
     '.sh': 'text',
+    '.bash': 'text',
   },
 });

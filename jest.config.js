@@ -15,7 +15,7 @@ module.exports = {
   transform: {
     '^.+\\.tsx?$': 'ts-jest',
     '^.+\\.m?jsx?$': 'ts-jest',
-    '^.+\\.(hbs|md|css|yaml|sh)$': '<rootDir>/tests/fileTransformer.cjs',
+    '^.+\\.(hbs|md|css|yaml|sh|bash)$': '<rootDir>/tests/fileTransformer.cjs',
   },
   transformIgnorePatterns: [
     'node_modules/(?!(marked|github-markdown-css|jose)/)',
