@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { NEVER, Observable, of } from 'rxjs';
 
-import install from './install.sh';
+import install from './install.bash';
 import etag from 'etag';
 
 export const bashRouter = (
@@ -9,6 +9,7 @@ export const bashRouter = (
   res: Response,
 ): Observable<Response> => {
   const paths = {
+    '/install.bash': install,
     '/install.sh': install,
   };
 
