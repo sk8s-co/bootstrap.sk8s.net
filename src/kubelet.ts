@@ -2,7 +2,7 @@ import * as yaml from 'js-yaml';
 import Handlebars from './handlebars';
 import { KubeletData, KubeletTemplateData } from './types';
 import templateSource from './templates/kubelet.sh.hbs';
-import kubeletYamlSource from './templates/kubelet.yaml';
+import kubeletYamlSource from './_yaml/kubelet.yaml';
 import { generateKubeconfig } from './kubeconfig';
 import { dump } from 'js-yaml';
 

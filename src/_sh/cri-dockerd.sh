@@ -20,7 +20,7 @@ echo "  Network Plugin: ${NETWORK_PLUGIN}" >&2
 echo "  Hairpin Mode: ${HAIRPIN_MODE}" >&2
 echo "" >&2
 
-exec /srv/cri-dockerd \
+exec cri-dockerd \
 --container-runtime-endpoint=${CONTAINER_RUNTIME_ENDPOINT} \
 --cri-dockerd-root-directory=${CRI_DOCKERD_ROOT_DIRECTORY} \
 --network-plugin=${NETWORK_PLUGIN} \

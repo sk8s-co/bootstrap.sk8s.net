@@ -9,9 +9,9 @@ fi
 PORT="$1"
 shift 1
 
-URL="https://127.0.0.1:${PORT}"
+ENDPOINT="https://127.0.0.1:${PORT}"
 # Deterministic port in ephemeral range (49152-65535) based on URL
-METRICS_PORT=$(echo "${URL}" | cksum | awk '{print ($1 % 16384) + 49152}')
+METRICS_PORT=$(echo "${ENDPOINT}" | cksum | awk '{print ($1 % 16384) + 49152}')
 
 mkdir -p "/var/run/${PORT}"
 HOSTNAME_FILE="/var/run/${PORT}/hostname"
@@ -34,7 +34,7 @@ PORT_FILE="/var/run/${PORT}/port"
 
 # Pretty print the execution
 echo "cloudflared.sh (bootstrap.sk8s.net) >>>" >&2
-echo "  URL: ${URL}" >&2
+echo "  Endpoint: ${ENDPOINT}" >&2
 echo "  Metrics Port: ${METRICS_PORT}" >&2
 echo "  Hostname File: ${HOSTNAME_FILE}" >&2
 echo "  Port File: ${PORT_FILE}" >&2
@@ -43,10 +43,9 @@ echo "" >&2
 # allow non-root ping
 echo "0 2147483647" > /proc/sys/net/ipv4/ping_group_range || echo "Failed to set ping_group_range" >&2
 
-exec /srv/cloudflared \
-tunnel \
+exec cloudflared tunnel \
 --metrics="localhost:${METRICS_PORT}" \
 --no-tls-verify \
---url="${URL}" \
+--url="${ENDPOINT}" \
 --loglevel warn \
 "$@"

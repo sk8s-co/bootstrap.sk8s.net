@@ -20,7 +20,7 @@ if [ -n "${OIDC_AUD:-}" ]; then
 fi
 
 RUN +env +raw https://bootstrap.sk8s.net/kubelet.yaml > "${KUBELET_CONFIG}"
-RUN +env +raw https://bootstrap.sk8s.net/kubeconfig.yaml > "${KUBECONFIG}"
+RUN +env +raw https://bootstrap.sk8s.net/kubeconfig > "${KUBECONFIG}"
 
 ROOT_DIR="/var/run/kube"
 CERT_DIR="/var/run/kube/pki"
@@ -48,7 +48,7 @@ echo "  Hostname: ${HOSTNAME_OVERRIDE}" >&2
 echo "  Host: ${KUBELET_EXTERNAL_DNS}:${KUBELET_EXTERNAL_PORT}" >&2
 
 echo "Starting kubelet on port ${KUBELET_PORT}..."
-exec /srv/kubelet \
+exec kubelet \
 --port="${KUBELET_PORT}" \
 --config="${KUBELET_CONFIG}" \
 --kubeconfig="${KUBECONFIG}" \

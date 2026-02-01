@@ -12,6 +12,12 @@
     "moduleResolution": "node",
     "types": ["node", "jest"]
   },
-  "include": ["src/**/*", "tests/**/*"],
+  "include": [
+    "src/**/*",
+    "src/static/**/*",
+    "tests/**/*",
+    "src/_yaml",
+    "src/_sh"
+  ],
   "exclude": ["node_modules", "dist"]
 }

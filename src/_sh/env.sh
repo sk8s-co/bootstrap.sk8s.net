@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e
+set -eu
 
 export OIDC_ISS="https://auth.sk8s.net/"
 export OIDC_AZP="CkbKDkUMWwmj4Ebi5GrO7X71LY57QRiU"
