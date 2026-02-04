@@ -33,7 +33,7 @@ PORT_FILE="/var/run/${PORT}/port"
 ) &
 
 # Pretty print the execution
-echo ".cloudflared.sh (bootstrap.sk8s.net) >>>" >&2
+echo ".tunnel.sh (bootstrap.sk8s.net) >>>" >&2
 echo "  Endpoint: ${ENDPOINT}" >&2
 echo "  Metrics Port: ${METRICS_PORT}" >&2
 echo "  Hostname File: ${HOSTNAME_FILE}" >&2
