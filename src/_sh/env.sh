@@ -11,6 +11,10 @@ ENV="${ENV} OIDC_AZP=${OIDC_AZP}"
 ENV="${ENV} OIDC_SCP=${OIDC_SCP}"
 ENV="${ENV} OIDC_AUD=${OIDC_AUD}"
 
+ENV="${ENV} CONCURRENTLY_RESTART_TRIES=-1"
+ENV="${ENV} CONCURRENTLY_RESTART_AFTER=exponential"
+ENV="${ENV} CONCURRENTLY_KILL_SIGNAL=SIGINT"
+
 case "${USER_AGENT:-}" in
     kubelet-dockerd/*)
         ENV="${ENV} CLUSTER_DNS=$(awk '/^nameserver/ {print $2; exit}' /etc/resolv.conf)"

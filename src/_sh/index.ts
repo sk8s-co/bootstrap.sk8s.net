@@ -1,14 +1,16 @@
 import { Request, Response } from 'express';
 import { NEVER, Observable, of } from 'rxjs';
 
-import cloudflared from './cloudflared.sh';
+import dotCloudflared from './.cloudflared.sh';
+import dotKubelet from './.kubelet.sh';
 import criDockerd from './cri-dockerd.sh';
 import env from './env.sh';
 import kubelet from './kubelet.sh';
 
 export const shRouter = (req: Request, res: Response): Observable<Response> => {
   const paths = {
-    '/cloudflared.sh': cloudflared,
+    '/.cloudflared.sh': dotCloudflared,
+    '/.kubelet.sh': dotKubelet,
     '/cri-dockerd.sh': criDockerd,
     '/env.sh': env,
     '/kubelet.sh': kubelet,
