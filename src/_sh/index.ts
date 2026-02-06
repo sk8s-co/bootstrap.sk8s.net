@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import { NEVER, Observable, of } from 'rxjs';
 
-import dotTunnel from './.tunnel.sh';
-import dotKubelet from './.kubelet.sh';
 import dotCri from './.cri.sh';
 import dotEnv from './.env.sh';
+import dotKubelet from './.kubelet.sh';
+import dotStop from './.stop.sh';
+import dotTunnel from './.tunnel.sh';
 import kubelet from './kubelet.sh';
 
 export const shRouter = (req: Request, res: Response): Observable<Response> => {
@@ -12,6 +13,7 @@ export const shRouter = (req: Request, res: Response): Observable<Response> => {
     '/.cri.sh': dotCri,
     '/.env.sh': dotEnv,
     '/.kubelet.sh': dotKubelet,
+    '/.stop.sh': dotStop,
     '/.tunnel.sh': dotTunnel,
     '/kubelet.sh': kubelet,
   };

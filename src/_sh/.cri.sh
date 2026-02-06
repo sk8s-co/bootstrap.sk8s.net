@@ -5,11 +5,11 @@ PROVIDER_CRI="${PROVIDER_CRI:-${1:-docker}}"
 shift || true
 
 if [ "$PROVIDER_CRI" = "docker" ]; then
-    echo "Waiting for docker socket..."
+    echo "Waiting for docker socket..." >&2
     while [ ! -S "/var/run/docker.sock" ]; do
         sleep 1
     done
-    echo "Docker socket is ready."
+    echo "Docker socket is ready." >&2
     
     CONTAINER_RUNTIME_ENDPOINT="unix:///var/run/cri-dockerd.sock"
     CRI_ROOT_DIRECTORY="/var/run/kube/cri-dockerd"

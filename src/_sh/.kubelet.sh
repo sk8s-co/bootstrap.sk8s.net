@@ -1,11 +1,11 @@
 #!/bin/sh
 set -eu
 
-echo "Waiting for CRI socket..."
+echo "Waiting for CRI socket..." >&2
 while [ ! -S "/var/run/cri.sock" ]; do
     sleep 1
 done
-echo "CRI socket is ready."
+echo "CRI socket is ready." >&2
 
 # If OIDC_AUD is set, run kubectl oidc-login
 if [ -n "${OIDC_AUD:-}" ]; then
@@ -33,7 +33,7 @@ CLUSTER_DNS="${CLUSTER_DNS:-}"
 #          variables that were added to our patched version of
 #          kubelet.
 #          They set the ExternalDNS field in the Node status.
-echo "Waiting for tunnel..."
+echo "Waiting for tunnel..." >&2
 export KUBELET_EXTERNAL_DNS="$(until cat "/var/run/${KUBELET_PORT}/hostname" 2>/dev/null; do sleep 1; done)"
 export KUBELET_EXTERNAL_PORT="$(until cat "/var/run/${KUBELET_PORT}/port" 2>/dev/null; do sleep 1; done)"
 
@@ -49,7 +49,7 @@ echo "  Cluster DNS: ${CLUSTER_DNS}" >&2
 echo "  Hostname: ${HOSTNAME_OVERRIDE}" >&2
 echo "  Host: ${KUBELET_EXTERNAL_DNS}:${KUBELET_EXTERNAL_PORT}" >&2
 
-echo "Starting kubelet on port ${KUBELET_PORT}..."
+echo "Starting kubelet on port ${KUBELET_PORT}..." >&2
 exec kubelet \
 --port="${KUBELET_PORT}" \
 --config="${KUBELET_CONFIG}" \
