@@ -3,16 +3,16 @@ import { NEVER, Observable, of } from 'rxjs';
 
 import dotTunnel from './.tunnel.sh';
 import dotKubelet from './.kubelet.sh';
-import criDockerd from './cri-dockerd.sh';
-import env from './env.sh';
+import dotCri from './.cri.sh';
+import dotEnv from './.env.sh';
 import kubelet from './kubelet.sh';
 
 export const shRouter = (req: Request, res: Response): Observable<Response> => {
   const paths = {
+    '/.cri.sh': dotCri,
+    '/.env.sh': dotEnv,
     '/.kubelet.sh': dotKubelet,
     '/.tunnel.sh': dotTunnel,
-    '/cri-dockerd.sh': criDockerd,
-    '/env.sh': env,
     '/kubelet.sh': kubelet,
   };
 

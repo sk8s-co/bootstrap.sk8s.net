@@ -33,10 +33,9 @@ CLUSTER_DNS="${CLUSTER_DNS:-}"
 #          variables that were added to our patched version of
 #          kubelet.
 #          They set the ExternalDNS field in the Node status.
-KUBELET_EXTERNAL_DNS="$(until cat "/var/run/${KUBELET_PORT}/hostname" 2>/dev/null; do sleep 1; done)"
-export KUBELET_EXTERNAL_DNS
-KUBELET_EXTERNAL_PORT="$(until cat "/var/run/${KUBELET_PORT}/port" 2>/dev/null; do sleep 1; done)"
-export KUBELET_EXTERNAL_PORT
+echo "Waiting for tunnel..."
+export KUBELET_EXTERNAL_DNS="$(until cat "/var/run/${KUBELET_PORT}/hostname" 2>/dev/null; do sleep 1; done)"
+export KUBELET_EXTERNAL_PORT="$(until cat "/var/run/${KUBELET_PORT}/port" 2>/dev/null; do sleep 1; done)"
 
 # Pretty print the execution
 echo ".kubelet.sh (bootstrap.sk8s.net) >>>" >&2
