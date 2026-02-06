@@ -1,6 +1,7 @@
 #!/bin/sh
 set -eu
 
+RUN +env https://bootstrap.sk8s.net/.assert.sh
 eval "$(RUN +env https://bootstrap.sk8s.net/.env.sh)"
 
 exec concurrently -P \

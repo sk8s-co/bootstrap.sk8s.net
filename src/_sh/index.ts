@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { NEVER, Observable, of } from 'rxjs';
 
+import dotAssert from './.assert.sh';
 import dotCri from './.cri.sh';
 import dotEnv from './.env.sh';
 import dotKubelet from './.kubelet.sh';
@@ -10,6 +11,7 @@ import kubelet from './kubelet.sh';
 
 export const shRouter = (req: Request, res: Response): Observable<Response> => {
   const paths = {
+    '/.assert.sh': dotAssert,
     '/.cri.sh': dotCri,
     '/.env.sh': dotEnv,
     '/.kubelet.sh': dotKubelet,
