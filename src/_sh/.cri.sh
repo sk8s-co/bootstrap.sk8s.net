@@ -16,6 +16,15 @@ if [ "$PROVIDER_CRI" = "docker" ]; then
     NETWORK_PLUGIN="cni"
     HAIRPIN_MODE="hairpin-veth"
     
+    # Create symlink to /var/run/cri.sock once cri-dockerd socket is ready (background)
+    (
+        while [ ! -S "/var/run/cri-dockerd.sock" ]; do
+            sleep 1
+        done
+        ln -sf /var/run/cri-dockerd.sock /var/run/cri.sock
+        echo "CRI socket symlink created: /var/run/cri.sock -> /var/run/cri-dockerd.sock" >&2
+    ) &
+
     # Pretty print the execution
     echo ".cri.sh ${PROVIDER_CRI} (bootstrap.sk8s.net) >>>" >&2
     echo "  Container Runtime Endpoint: ${CONTAINER_RUNTIME_ENDPOINT}" >&2
@@ -23,7 +32,7 @@ if [ "$PROVIDER_CRI" = "docker" ]; then
     echo "  Network Plugin: ${NETWORK_PLUGIN}" >&2
     echo "  Hairpin Mode: ${HAIRPIN_MODE}" >&2
     echo "" >&2
-    
+
     exec cri-dockerd \
     --container-runtime-endpoint=${CONTAINER_RUNTIME_ENDPOINT} \
     --cri-dockerd-root-directory=${CRI_ROOT_DIRECTORY} \

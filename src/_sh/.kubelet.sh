@@ -1,11 +1,11 @@
 #!/bin/sh
 set -eu
 
-echo "Waiting for cri-dockerd socket..."
-while [ ! -S "/var/run/cri-dockerd.sock" ]; do
+echo "Waiting for CRI socket..."
+while [ ! -S "/var/run/cri.sock" ]; do
     sleep 1
 done
-echo "cri-dockerd socket is ready."
+echo "CRI socket is ready."
 
 # If OIDC_AUD is set, run kubectl oidc-login
 if [ -n "${OIDC_AUD:-}" ]; then
@@ -60,3 +60,4 @@ exec kubelet \
 --cluster-domain="${CLUSTER_DOMAIN}" \
 --cluster-dns="${CLUSTER_DNS}" \
 "$@"
+    
