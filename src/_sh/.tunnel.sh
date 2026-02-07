@@ -37,12 +37,14 @@ if [ "$PROVIDER_TUNNEL" = "cloudflare" ]; then
     ) &
     
     # Pretty print the execution
-    echo ".tunnel.sh ${PROVIDER_TUNNEL} (bootstrap.sk8s.net) >>>" >&2
-    echo "  Endpoint: ${ENDPOINT}" >&2
-    echo "  Metrics Port: ${METRICS_PORT}" >&2
-    echo "  Hostname File: ${HOSTNAME_FILE}" >&2
-    echo "  Port File: ${PORT_FILE}" >&2
-    echo "" >&2
+    {
+        echo ".tunnel.sh ${PROVIDER_TUNNEL} (bootstrap.sk8s.net) >>>" >&2
+        echo "  Endpoint: ${ENDPOINT}" >&2
+        echo "  Metrics Port: ${METRICS_PORT}" >&2
+        echo "  Hostname File: ${HOSTNAME_FILE}" >&2
+        echo "  Port File: ${PORT_FILE}" >&2
+        echo "" >&2
+    } >&2
     
     # allow non-root ping
     echo "0 2147483647" > /proc/sys/net/ipv4/ping_group_range || echo "Failed to set ping_group_range" >&2

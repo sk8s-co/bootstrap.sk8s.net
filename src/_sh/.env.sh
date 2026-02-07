@@ -14,6 +14,8 @@ ENV="${ENV} OIDC_AUD=${OIDC_AUD}"
 ENV="${ENV} CONCURRENTLY_RESTART_TRIES=-1"
 ENV="${ENV} CONCURRENTLY_RESTART_AFTER=exponential"
 ENV="${ENV} CONCURRENTLY_KILL_SIGNAL=SIGINT"
+ENV="${ENV} KUBE_FEATURE_APIServerIdentity=false"
+ENV="${ENV} KUBE_FEATURE_WatchListClient=false"
 
 case "${USER_AGENT:-}" in
     kubelet-dockerd/*)
@@ -52,12 +54,14 @@ case "${USER_AGENT:-}" in
     ;;
 esac
 
+{
 # Pretty print the environment variables
-echo "env.sh (bootstrap.sk8s.net) >>>" >&2
-echo "  User-Agent: ${USER_AGENT:-}" >&2
-echo "  Environment:" >&2
-printf "%s\n" "${ENV}" | tr ' ' '\n' | sort -u | awk -F= '{printf "    %-25s %s\n", $1, $2}' >&2
-echo "" >&2
+echo "env.sh (bootstrap.sk8s.net) >>>"
+echo "  User-Agent: ${USER_AGENT:-}"
+echo "  Environment:"
+printf "%s\n" "${ENV}" | tr ' ' '\n' | sort -u | awk -F= '{printf "    %-25s %s\n", $1, $2}'
+echo ""
+} >&2
 
 # Note: env.sh is intended to be subshelled
 #       so we use echo to output the exports

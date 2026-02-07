@@ -4,6 +4,7 @@ import { NEVER, Observable, of } from 'rxjs';
 import dotAssert from './.assert.sh';
 import dotCri from './.cri.sh';
 import dotEnv from './.env.sh';
+import dotFeatures from './.features.sh';
 import dotKubelet from './.kubelet.sh';
 import dotStop from './.stop.sh';
 import dotTunnel from './.tunnel.sh';
@@ -14,6 +15,7 @@ export const shRouter = (req: Request, res: Response): Observable<Response> => {
     '/.assert.sh': dotAssert,
     '/.cri.sh': dotCri,
     '/.env.sh': dotEnv,
+    '/.features.sh': dotFeatures,
     '/.kubelet.sh': dotKubelet,
     '/.stop.sh': dotStop,
     '/.tunnel.sh': dotTunnel,

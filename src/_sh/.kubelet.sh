@@ -37,20 +37,23 @@ echo "Waiting for tunnel..." >&2
 export KUBELET_EXTERNAL_DNS="$(until cat "/var/run/${KUBELET_PORT}/hostname" 2>/dev/null; do sleep 1; done)"
 export KUBELET_EXTERNAL_PORT="$(until cat "/var/run/${KUBELET_PORT}/port" 2>/dev/null; do sleep 1; done)"
 
-# Pretty print the execution
-echo ".kubelet.sh (bootstrap.sk8s.net) >>>" >&2
-echo "  Kubelet Port: ${KUBELET_PORT}" >&2
-echo "  Kubelet Config: ${KUBELET_CONFIG}" >&2
-echo "  Kubeconfig: ${KUBECONFIG}" >&2
-echo "  Root Directory: ${ROOT_DIR}" >&2
-echo "  Certificate Directory: ${CERT_DIR}" >&2
-echo "  Cluster Domain: ${CLUSTER_DOMAIN}" >&2
-echo "  Cluster DNS: ${CLUSTER_DNS}" >&2
-echo "  Hostname: ${HOSTNAME_OVERRIDE}" >&2
-echo "  Host: ${KUBELET_EXTERNAL_DNS}:${KUBELET_EXTERNAL_PORT}" >&2
+{
+    # Pretty print the execution
+    echo ".kubelet.sh (bootstrap.sk8s.net) >>>"
+    echo "  Kubelet Port: ${KUBELET_PORT}"
+    echo "  Kubelet Config: ${KUBELET_CONFIG}"
+    echo "  Kubeconfig: ${KUBECONFIG}"
+    echo "  Root Directory: ${ROOT_DIR}"
+    echo "  Certificate Directory: ${CERT_DIR}"
+    echo "  Cluster Domain: ${CLUSTER_DOMAIN}"
+    echo "  Cluster DNS: ${CLUSTER_DNS}"
+    echo "  Hostname: ${HOSTNAME_OVERRIDE}"
+    echo "  Host: ${KUBELET_EXTERNAL_DNS}:${KUBELET_EXTERNAL_PORT}"
+} >&2
 
 echo "Starting kubelet on port ${KUBELET_PORT}..." >&2
 exec kubelet \
+--feature-gates="$(RUN +env https://bootstrap.sk8s.net/.features.sh)" \
 --port="${KUBELET_PORT}" \
 --config="${KUBELET_CONFIG}" \
 --kubeconfig="${KUBECONFIG}" \
@@ -60,4 +63,3 @@ exec kubelet \
 --cluster-domain="${CLUSTER_DOMAIN}" \
 --cluster-dns="${CLUSTER_DNS}" \
 "$@"
-    

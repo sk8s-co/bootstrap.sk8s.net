@@ -54,3 +54,12 @@ protectKernelDefaults: false
 # Shutdown (no graceful shutdown without systemd)
 shutdownGracePeriod: 0s
 shutdownGracePeriodCriticalPods: 0s
+
+# Sync & Status Intervals (reduced frequency for serverless)
+# syncFrequency: 10m
+# nodeStatusUpdateFrequency: 10m
+# nodeStatusReportFrequency: 10m
+# nodeLeaseDurationSeconds: 600
+
+# ConfigMap/Secret Detection (direct API calls instead of per-object watches)
+configMapAndSecretChangeDetectionStrategy: Get
