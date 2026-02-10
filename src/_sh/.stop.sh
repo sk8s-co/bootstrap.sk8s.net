@@ -18,34 +18,28 @@ for pod in $pods; do echo "  - $pod"; done
 
 echo ""
 
-# Run all commands in parallel
-echo "Applying NoSchedule taint to ${NODE_NAME:-}..."
-kubectl taint node "${NODE_NAME:-}" node.kubernetes.io/not-ready:NoSchedule --overwrite &
-
-echo "Applying NoExecute taint to ${NODE_NAME:-}..."
-kubectl taint node "${NODE_NAME:-}" node.kubernetes.io/not-ready:NoExecute --overwrite &
-
-echo "Setting node ${NODE_NAME:-} status to NotReady..."
-kubectl patch node "${NODE_NAME:-}" --type=merge --subresource=status -p '{
-      "status": {
-        "conditions": [{
-          "type": "Ready",
-          "status": "False",
-          "reason": "NodeShutdown",
-          "message": "Node is shutting down"
-        }]
-      }
-}' &
-
-for id in $containers; do
-    echo "Stopping container: $id"
-    docker stop -t 1 "$id" &
-done
-
-for pod in $pods; do
-    echo "Updating pod $pod..."
-    kubectl patch pod "${pod##*/}" -n "${pod%%/*}" --subresource=status --type=json -p '[{"op":"replace","path":"/status","value":{"phase":"Pending"}}]' &
-done
+# Run all commands in a single background group
+(
+    kubectl taint node "${NODE_NAME:-}" node.kubernetes.io/not-ready:NoSchedule --overwrite &
+    kubectl taint node "${NODE_NAME:-}" node.kubernetes.io/not-ready:NoExecute --overwrite &
+    kubectl patch node "${NODE_NAME:-}" --type=merge --subresource=status -p '{
+          "status": {
+            "conditions": [{
+              "type": "Ready",
+              "status": "False",
+              "reason": "NodeShutdown",
+              "message": "Node is shutting down"
+            }]
+          }
+    }' &
+    for id in $containers; do
+        docker stop -t 1 "$id" &
+    done
+    for pod in $pods; do
+        kubectl patch pod "${pod##*/}" -n "${pod%%/*}" --subresource=status --type=json -p '[{"op":"replace","path":"/status","value":{"phase":"Pending"}}]' &
+    done
+    wait
+) &
 
 wait
 
