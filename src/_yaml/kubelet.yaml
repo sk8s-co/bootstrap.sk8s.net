@@ -55,8 +55,9 @@ protectKernelDefaults: false
 shutdownGracePeriod: 0s
 shutdownGracePeriodCriticalPods: 0s
 
-# Sync & Status Intervals (reduced frequency for serverless)
-# syncFrequency: 10m
+# Sync Frequency (heartbeat-like updates instead of watch backoff)
+# syncFrequency handles pod reconciliation every 60s, reducing reliance on watches
+syncFrequency: 60s
 # nodeStatusUpdateFrequency: 10m
 # nodeStatusReportFrequency: 10m
 # nodeLeaseDurationSeconds: 600

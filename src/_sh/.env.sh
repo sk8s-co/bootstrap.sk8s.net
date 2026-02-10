@@ -29,14 +29,14 @@ case "${USER_AGENT:-}" in
         ENV="${ENV} KUBELET_PORT=$(echo "${MACHINE_ID}" | cksum | awk '{print ($1 % 16384) + 49152}')"
         ENV="${ENV} MACHINE_ID=${MACHINE_ID}"
         ENV="${ENV} NODE_NAME=$(hostname | cut -d. -f1 | tr '[:upper:]' '[:lower:]')"
-        # Kubelet Periodic Watch Settings
-        # Fixed interval: watch 2s → wait 30s → watch 2s → wait 30s → ...
-        # Worst-case reaction time: ~32 seconds
+        # Kubelet Watch Settings (pods/services/nodes combined via patch)
+        # Watch 2s → wait 5min → watch 2s → wait 5min → ...
+        # Changes detected via syncFrequency (60s) instead of watches
         ENV="${ENV} WATCH_MIN_TIMEOUT=\"2\""
         ENV="${ENV} WATCH_MAX_TIMEOUT=\"2\""
-        ENV="${ENV} WATCH_BACKOFF_INIT=\"30\""
-        ENV="${ENV} WATCH_BACKOFF_MAX=\"30\""
-        ENV="${ENV} WATCH_BACKOFF_RESET=\"30\""
+        ENV="${ENV} WATCH_BACKOFF_INIT=\"300\""
+        ENV="${ENV} WATCH_BACKOFF_MAX=\"300\""
+        ENV="${ENV} WATCH_BACKOFF_RESET=\"300\""
         ENV="${ENV} WATCH_BACKOFF_FACTOR=\"1.0\""
         ENV="${ENV} WATCH_BACKOFF_JITTER=\"1.0\""
         ENV="${ENV} WATCH_BACKOFF_ON_EMPTY=\"true\""
