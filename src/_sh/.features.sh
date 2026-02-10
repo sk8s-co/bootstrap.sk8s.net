@@ -1,9 +1,10 @@
 #!/bin/sh
 set -eu
 
-API_SERVER_IDENTITY="${API_SERVER_IDENTITY:-false}"
-WATCH_LIST_CLIENT="${WATCH_LIST_CLIENT:-false}"
-RUNTIME_CLASS_IN_IMAGE_CRI_API="${RUNTIME_CLASS_IN_IMAGE_CRI_API:-false}"
+# Read from KUBE_FEATURE_* environment variables (set by .env.sh)
+API_SERVER_IDENTITY="${KUBE_FEATURE_APIServerIdentity:-false}"
+WATCH_LIST_CLIENT="${KUBE_FEATURE_WatchListClient:-false}"
+RUNTIME_CLASS_IN_IMAGE_CRI_API="${KUBE_FEATURE_RuntimeClassInImageCriApi:-false}"
 
 {
     # Pretty print the execution

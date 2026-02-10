@@ -16,6 +16,7 @@ ENV="${ENV} CONCURRENTLY_RESTART_AFTER=exponential"
 ENV="${ENV} CONCURRENTLY_KILL_SIGNAL=SIGINT"
 ENV="${ENV} KUBE_FEATURE_APIServerIdentity=false"
 ENV="${ENV} KUBE_FEATURE_WatchListClient=false"
+ENV="${ENV} KUBE_FEATURE_RuntimeClassInImageCriApi=false"
 
 case "${USER_AGENT:-}" in
     kubelet-dockerd/*)
