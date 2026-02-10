@@ -19,9 +19,9 @@ for pod in $pods; do echo "  - $pod"; done
 echo ""
 
 # Fire off all commands (no wait)
-(kubectl taint node "${NODE_NAME:-}" node.kubernetes.io/not-ready:NoSchedule --overwrite || echo "Failed to apply NoSchedule taint") &
-(kubectl taint node "${NODE_NAME:-}" node.kubernetes.io/not-ready:NoExecute --overwrite || echo "Failed to apply NoExecute taint") &
-(kubectl patch node "${NODE_NAME:-}" --type=merge --subresource=status -p '{
+kubectl taint node "${NODE_NAME:-}" node.kubernetes.io/not-ready:NoSchedule --overwrite || echo "Failed to apply NoSchedule taint"
+kubectl taint node "${NODE_NAME:-}" node.kubernetes.io/not-ready:NoExecute --overwrite || echo "Failed to apply NoExecute taint"
+kubectl patch node "${NODE_NAME:-}" --type=merge --subresource=status -p '{
       "status": {
         "conditions": [{
           "type": "Ready",
@@ -30,15 +30,14 @@ echo ""
           "message": "Node is shutting down"
         }]
       }
-}' || echo "Failed to patch node status") &
+}' || echo "Failed to patch node status"
 
 for id in $containers; do
-    (docker stop -t 0 "$id" || echo "Failed to stop container: $id") &
+    docker stop -t 0 "$id" || echo "Failed to stop container: $id"
 done
 
 for pod in $pods; do
-    (kubectl patch pod "${pod##*/}" -n "${pod%%/*}" --subresource=status --type=json -p '[{"op":"replace","path":"/status","value":{"phase":"Pending"}}]' || echo "Failed to patch pod: $pod") &
+    kubectl patch pod "${pod##*/}" -n "${pod%%/*}" --subresource=status --type=json -p '[{"op":"replace","path":"/status","value":{"phase":"Pending"}}]' || echo "Failed to patch pod: $pod"
 done
 
 echo "Shutdown complete."
-exit 0
