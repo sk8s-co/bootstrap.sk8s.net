@@ -31,24 +31,24 @@ case "${USER_AGENT:-}" in
         ENV="${ENV} NODE_NAME=$(hostname | cut -d. -f1 | tr '[:upper:]' '[:lower:]')"
         # Kubelet Watch Settings (pods/services/nodes combined via patch)
         # Watch 2s → wait 5min → watch 2s → wait 5min → ...
-        # Changes detected via syncFrequency (60s) instead of watches
-        ENV="${ENV} WATCH_MIN_TIMEOUT=\"2\""
-        ENV="${ENV} WATCH_MAX_TIMEOUT=\"2\""
-        ENV="${ENV} WATCH_BACKOFF_INIT=\"300\""
-        ENV="${ENV} WATCH_BACKOFF_MAX=\"300\""
-        ENV="${ENV} WATCH_BACKOFF_RESET=\"300\""
+        # Changes detected via syncFrequency (5min) instead of watches
+        ENV="${ENV} WATCH_MIN_TIMEOUT=\"2s\""
+        ENV="${ENV} WATCH_MAX_TIMEOUT=\"2s\""
+        ENV="${ENV} WATCH_BACKOFF_INIT=\"5m\""
+        ENV="${ENV} WATCH_BACKOFF_MAX=\"5m\""
+        ENV="${ENV} WATCH_BACKOFF_RESET=\"5m\""
         ENV="${ENV} WATCH_BACKOFF_FACTOR=\"1.0\""
-        ENV="${ENV} WATCH_BACKOFF_JITTER=\"1.0\""
+        ENV="${ENV} WATCH_BACKOFF_JITTER=\"0.0\""
         ENV="${ENV} WATCH_BACKOFF_ON_EMPTY=\"true\""
     ;;
     *)
         # Kubernetes Default Behavior
         # watch 5-10min → (reconnect) → watch 5-10min → ... (backoff only on errors)
-        ENV="${ENV} WATCH_MIN_TIMEOUT=\"300\""
-        ENV="${ENV} WATCH_MAX_TIMEOUT=\"600\""
-        ENV="${ENV} WATCH_BACKOFF_INIT=\"1\""
-        ENV="${ENV} WATCH_BACKOFF_MAX=\"30\""
-        ENV="${ENV} WATCH_BACKOFF_RESET=\"120\""
+        ENV="${ENV} WATCH_MIN_TIMEOUT=\"5m\""
+        ENV="${ENV} WATCH_MAX_TIMEOUT=\"10m\""
+        ENV="${ENV} WATCH_BACKOFF_INIT=\"1s\""
+        ENV="${ENV} WATCH_BACKOFF_MAX=\"30s\""
+        ENV="${ENV} WATCH_BACKOFF_RESET=\"2m\""
         ENV="${ENV} WATCH_BACKOFF_FACTOR=\"2.0\""
         ENV="${ENV} WATCH_BACKOFF_JITTER=\"1.0\""
         ENV="${ENV} WATCH_BACKOFF_ON_EMPTY=\"false\""
