@@ -55,12 +55,12 @@ protectKernelDefaults: false
 shutdownGracePeriod: 0s
 shutdownGracePeriodCriticalPods: 0s
 
-# Sync Frequency (heartbeat-like updates instead of watch backoff)
-# syncFrequency handles pod reconciliation every 60s, reducing reliance on watches
+# 5 Minute Heartbeats (all sync/status intervals aligned)
+# Reduces API traffic - pods/nodes reconciled via syncFrequency instead of watches
 syncFrequency: 5m
-# nodeStatusUpdateFrequency: 10m
-# nodeStatusReportFrequency: 10m
-# nodeLeaseDurationSeconds: 600
+nodeStatusUpdateFrequency: 5m
+nodeStatusReportFrequency: 5m
+nodeLeaseDurationSeconds: 300
 
 # ConfigMap/Secret Detection (direct API calls instead of per-object watches)
 configMapAndSecretChangeDetectionStrategy: Get
