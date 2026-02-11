@@ -57,7 +57,7 @@ shutdownGracePeriodCriticalPods: 0s
 
 # Sync Frequency (heartbeat-like updates instead of watch backoff)
 # syncFrequency handles pod reconciliation every 60s, reducing reliance on watches
-syncFrequency: 60s
+syncFrequency: 5m
 # nodeStatusUpdateFrequency: 10m
 # nodeStatusReportFrequency: 10m
 # nodeLeaseDurationSeconds: 600
