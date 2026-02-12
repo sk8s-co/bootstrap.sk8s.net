@@ -18,7 +18,7 @@ module.exports = {
     '^.+\\.(hbs|md|css|yaml|sh|bash)$': '<rootDir>/tests/fileTransformer.cjs',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(marked|github-markdown-css|jose)/)',
+    'node_modules/(?!(marked|github-markdown-css|jose|@noble/curves|@noble/hashes)/)',
   ],
   extensionsToTreatAsEsm: ['.ts'],
   globals: {
