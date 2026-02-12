@@ -5,7 +5,7 @@ import { router } from './router';
 /**
  * Creates and configures the Express application
  */
-export const createApp = (timeout: number = 30_000) => {
+export const createApp = (timeout: number = 10_000) => {
   const app = express();
 
   app.use(express.json());
