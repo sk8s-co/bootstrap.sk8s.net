@@ -152,3 +152,4 @@ jobs:
           image: ghcr.io/${{ github.repository }}:latest
           memory: 512
           routes: ./routes.yaml
+          secrets: ${{ toJSON(secrets) }}

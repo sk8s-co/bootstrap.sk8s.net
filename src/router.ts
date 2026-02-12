@@ -5,6 +5,7 @@ import { defer, firstValueFrom, map, Observable, race, timer } from 'rxjs';
 import { shRouter } from './_sh';
 import { bashRouter } from './_bash';
 import { yamlRouter } from './_yaml';
+import { certRouter } from './_crt';
 
 const withTimeout = (deadline: number, res: Response): Observable<Response> => {
   return defer(() =>
@@ -38,14 +39,15 @@ export const router = () => {
     }
   });
 
-  r.get(/^\/.*\.(sh|yaml)$/, async (req: Request, res: Response) => {
+  r.get(/^\/.*\.(sh|yaml|crt|key)$/, async (req: Request, res: Response) => {
     try {
       return await firstValueFrom(
         race(
           bashRouter(req, res),
           shRouter(req, res),
           yamlRouter(req, res),
-          withTimeout(1000, res),
+          certRouter(req, res),
+          withTimeout(30000, res),
         ),
       );
     } catch (e) {

@@ -1,5 +1,10 @@
 {
   "permissions": {
-    "allow": ["Bash", "WebSearch", "WebFetch"]
+    "allow": [
+      "Bash",
+      "WebSearch",
+      "WebFetch",
+      "mcp__ide__getDiagnostics"
+    ]
   }
 }
