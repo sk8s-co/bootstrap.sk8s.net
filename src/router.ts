@@ -18,7 +18,7 @@ const withTimeout = (deadline: number, res: Response): Observable<Response> => {
 /**
  * Router factory that returns configured Express router
  */
-export const router = () => {
+export const router = (timeout: number) => {
   const r = Router();
 
   r.get('/kubeconfig', (req: Request, res: Response, next: NextFunction) => {
@@ -47,7 +47,7 @@ export const router = () => {
           shRouter(req, res),
           yamlRouter(req, res),
           certRouter(req, res),
-          withTimeout(30000, res),
+          withTimeout(timeout, res),
         ),
       );
     } catch (e) {

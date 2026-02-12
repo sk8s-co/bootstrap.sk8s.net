@@ -6,7 +6,7 @@ describe('Integration Tests', () => {
   let app: Express;
 
   beforeEach(() => {
-    app = createApp();
+    app = createApp(1_000);
   });
 
   describe('GET /kubeconfig', () => {

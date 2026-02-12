@@ -5,13 +5,13 @@ import { router } from './router';
 /**
  * Creates and configures the Express application
  */
-export const createApp = () => {
+export const createApp = (timeout: number = 30_000) => {
   const app = express();
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   app.use(sanitized());
-  app.use(router());
+  app.use(router(timeout));
 
   // Error handling middleware (must be last)
   app.use(errorHandler);
