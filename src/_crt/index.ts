@@ -10,6 +10,7 @@ import {
   SubjectKeyIdentifierExtension,
   X509CertificateGenerator,
 } from '@peculiar/x509';
+import { p256 } from '@noble/curves/nist.js';
 import { Request, Response } from 'express';
 import { firstValueFrom, from, map, NEVER, Observable } from 'rxjs';
 import { identity } from './identity';
@@ -48,31 +49,30 @@ const keyPair = async (
       .map((p) => `DC=${p}`)
       .join(',');
 
+  // Derive deterministic seed for private key
   const seed = createHash('sha256').update(`${name}:${secret}`).digest();
 
-  // PKCS#8 wrapper for Ed25519 private key (prefix + 32-byte seed)
-  const pkcs8 = Buffer.concat([
-    Buffer.from('302e020100300506032b657004220420', 'hex'),
-    seed,
-  ]);
+  // Use seed as ECDSA P-256 private key (32 bytes)
+  const privateKeyBytes = seed;
+  const publicKeyBytes = p256.getPublicKey(privateKeyBytes, false); // uncompressed
 
-  // Import private key from PKCS#8
+  // Import private key as JWK (ECDSA P-256)
+  const d = Buffer.from(privateKeyBytes).toString('base64url');
+  const x = Buffer.from(publicKeyBytes.slice(1, 33)).toString('base64url');
+  const y = Buffer.from(publicKeyBytes.slice(33, 65)).toString('base64url');
+
   const privateKey = await subtle.importKey(
-    'pkcs8',
-    pkcs8,
-    { name: 'Ed25519' },
+    'jwk',
+    { kty: 'EC', crv: 'P-256', d, x, y },
+    { name: 'ECDSA', namedCurve: 'P-256' },
     true,
     ['sign'],
   );
 
-  // Export as JWK to derive public key
-  const jwk = await subtle.exportKey('jwk', privateKey);
-
-  // Import public key from JWK (without private component)
   const publicKey = await subtle.importKey(
     'jwk',
-    { kty: jwk.kty, crv: jwk.crv, x: jwk.x },
-    { name: 'Ed25519' },
+    { kty: 'EC', crv: 'P-256', x, y },
+    { name: 'ECDSA', namedCurve: 'P-256' },
     true,
     ['verify'],
   );
@@ -101,7 +101,7 @@ const ca = async (req: Request): Promise<FileResponse> => {
     name: `CN=${host},${controller}`,
     notBefore,
     notAfter,
-    signingAlgorithm: { name: 'Ed25519' },
+    signingAlgorithm: { name: 'ECDSA', hash: 'SHA-256' },
     keys,
     extensions: [
       new BasicConstraintsExtension(true, 2, true), // CA: true, path length: 2, critical
@@ -133,7 +133,7 @@ const cert = async (req: Request): Promise<FileResponse> => {
     issuer: subject,
     notBefore,
     notAfter,
-    signingAlgorithm: { name: 'Ed25519' },
+    signingAlgorithm: { name: 'ECDSA', hash: 'SHA-256' },
     publicKey: keys.publicKey,
     signingKey: __keys.privateKey,
     extensions: [
