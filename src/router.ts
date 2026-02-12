@@ -39,22 +39,25 @@ export const router = (timeout: number) => {
     }
   });
 
-  r.get(/^\/.*\.(sh|yaml|crt|key)$/, async (req: Request, res: Response) => {
-    try {
-      return await firstValueFrom(
-        race(
-          bashRouter(req, res),
-          shRouter(req, res),
-          yamlRouter(req, res),
-          certRouter(req, res),
-          withTimeout(timeout, res),
-        ),
-      );
-    } catch (e) {
-      console.error('Error in combined router:', e);
-      throw e;
-    }
-  });
+  r.get(
+    /^\/.*\.(sh|yaml|crt|key|pub)$/,
+    async (req: Request, res: Response) => {
+      try {
+        return await firstValueFrom(
+          race(
+            bashRouter(req, res),
+            shRouter(req, res),
+            yamlRouter(req, res),
+            certRouter(req, res),
+            withTimeout(timeout, res),
+          ),
+        );
+      } catch (e) {
+        console.error('Error in combined router:', e);
+        throw e;
+      }
+    },
+  );
 
   r.get('/', (req: Request, res: Response) => {
     // TODO Render Readme or something useful
