@@ -30,13 +30,13 @@ case "${USER_AGENT:-}" in
         ENV="${ENV} MACHINE_ID=${MACHINE_ID}"
         ENV="${ENV} NODE_NAME=$(hostname | cut -d. -f1 | tr '[:upper:]' '[:lower:]')"
         # Kubelet Watch Settings (pods/services/nodes combined via patch)
-        # Watch 2s → wait 5min → watch 2s → wait 5min → ...
-        # Changes detected via syncFrequency (5min) instead of watches
+        # Watch 2s → wait 60s → watch 2s → wait 60s → ...
+        # Changes detected via syncFrequency (60s) instead of watches
         ENV="${ENV} WATCH_MIN_TIMEOUT=\"2s\""
         ENV="${ENV} WATCH_MAX_TIMEOUT=\"2s\""
-        ENV="${ENV} WATCH_BACKOFF_INIT=\"5m\""
-        ENV="${ENV} WATCH_BACKOFF_MAX=\"5m\""
-        ENV="${ENV} WATCH_BACKOFF_RESET=\"5m\""
+        ENV="${ENV} WATCH_BACKOFF_INIT=\"60s\""
+        ENV="${ENV} WATCH_BACKOFF_MAX=\"60s\""
+        ENV="${ENV} WATCH_BACKOFF_RESET=\"60s\""
         ENV="${ENV} WATCH_BACKOFF_FACTOR=\"1.0\""
         ENV="${ENV} WATCH_BACKOFF_JITTER=\"0.0\""
         ENV="${ENV} WATCH_BACKOFF_ON_EMPTY=\"true\""
