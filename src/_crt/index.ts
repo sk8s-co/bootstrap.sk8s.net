@@ -179,6 +179,23 @@ const key = async (req: Request): Promise<FileResponse> => {
   };
 };
 
+const pub = async (req: Request): Promise<FileResponse> => {
+  const name = await firstValueFrom(identity(req));
+  const { subject, controller } = await ca(req);
+  const { keys } = await keyPair(name, controller);
+
+  const spki = await subtle.exportKey('spki', keys.publicKey);
+  const pem = PemConverter.encode(spki, 'PUBLIC KEY');
+
+  return {
+    contentType: 'application/x-pem-file',
+    data: pem,
+    subject,
+    controller,
+    __keys: keys,
+  };
+};
+
 export const certRouter = (
   req: Request,
   res: Response,
@@ -187,6 +204,7 @@ export const certRouter = (
     '/ca.crt': ca,
     '/client.crt': cert,
     '/client.key': key,
+    '/client.pub': pub,
   };
 
   if (!(req.path in paths)) {
