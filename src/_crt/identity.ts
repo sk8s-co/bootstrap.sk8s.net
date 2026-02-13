@@ -44,6 +44,6 @@ export const identity = (req: Request, timeout: number): Observable<string> => {
     aws(headers),
     github(headers),
     jwt(headers),
-    machineId(headers, timeout), // Fallback to machine ID after timeout
+    machineId(headers, timeout / 2), // Fallback to machine ID after half the allotted time
   );
 };
