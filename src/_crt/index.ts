@@ -4,9 +4,11 @@ import {
   BasicConstraintsExtension,
   ExtendedKeyUsage,
   ExtendedKeyUsageExtension,
+  GeneralName,
   KeyUsageFlags,
   KeyUsagesExtension,
   PemConverter,
+  SubjectAlternativeNameExtension,
   SubjectKeyIdentifierExtension,
   X509CertificateGenerator,
 } from '@peculiar/x509';
@@ -148,6 +150,11 @@ const cert = async (req: Request): Promise<FileResponse> => {
         [ExtendedKeyUsage.clientAuth, ExtendedKeyUsage.serverAuth],
         true,
       ),
+      new SubjectAlternativeNameExtension([
+        { type: 'dns', value: 'localhost' },
+        { type: 'dns', value: 'host.docker.internal' },
+        { type: 'ip', value: '127.0.0.1' },
+      ] as GeneralName[]),
       await SubjectKeyIdentifierExtension.create(keys.publicKey),
       await AuthorityKeyIdentifierExtension.create(__keys.publicKey),
     ],
