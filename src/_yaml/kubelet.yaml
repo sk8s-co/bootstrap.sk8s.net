@@ -58,8 +58,6 @@ shutdownGracePeriodCriticalPods: 0s
 # 60 Second Heartbeats (all sync/status intervals aligned)
 # Reduces API traffic - pods/nodes reconciled via syncFrequency instead of watches
 syncFrequency: 60s
-nodeStatusUpdateFrequency: 60s
-nodeStatusReportFrequency: 60s
 nodeLeaseDurationSeconds: 60
 
 # ConfigMap/Secret Detection (direct API calls instead of per-object watches)
