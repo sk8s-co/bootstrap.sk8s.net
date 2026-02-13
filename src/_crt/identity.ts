@@ -31,11 +31,19 @@ const github = (_headers: Request['headers']): Observable<string> => NEVER; // T
 
 const jwt = (_headers: Request['headers']): Observable<string> => NEVER; // TODO
 
-const anonymous = (timeout: number) =>
-  timer(timeout).pipe(map(() => 'anonymous'));
+const machineId = (headers: Request['headers'], timeout: number) =>
+  timer(timeout).pipe(
+    map(() => headers['x-env-machine_id']),
+    switchMap((id) => (id ? of(id.toString()) : NEVER)),
+  );
 
 export const identity = (req: Request): Observable<string> => {
   const { headers } = req;
 
-  return race(aws(headers), github(headers), jwt(headers), anonymous(5000));
+  return race(
+    aws(headers),
+    github(headers),
+    jwt(headers),
+    machineId(headers, 5000), // Fallback to machine ID after timeout
+  );
 };

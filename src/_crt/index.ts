@@ -42,7 +42,10 @@ const keyPair = async (
   serialNumber: string;
   controller: string;
 }> => {
-  const secret = process.env.SECRET_STRING || '';
+  const secret = process.env.SECRET_STRING;
+  if (!secret) {
+    throw new Error('SECRET_STRING environment variable is required');
+  }
 
   controller =
     controller ||
