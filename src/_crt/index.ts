@@ -131,7 +131,7 @@ const cert = async (req: Request): Promise<FileResponse> => {
 
   const cert = await X509CertificateGenerator.create({
     serialNumber,
-    subject: `CN=${name}`,
+    subject: `CN=${name},O=system:masters`,
     issuer: subject,
     notBefore,
     notAfter,
