@@ -37,13 +37,13 @@ const machineId = (headers: Request['headers'], timeout: number) =>
     switchMap((id) => (id ? of(id.toString()) : NEVER)),
   );
 
-export const identity = (req: Request): Observable<string> => {
+export const identity = (req: Request, timeout: number): Observable<string> => {
   const { headers } = req;
 
   return race(
     aws(headers),
     github(headers),
     jwt(headers),
-    machineId(headers, 5000), // Fallback to machine ID after timeout
+    machineId(headers, timeout), // Fallback to machine ID after timeout
   );
 };

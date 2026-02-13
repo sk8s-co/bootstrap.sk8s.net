@@ -97,7 +97,7 @@ const keyPair = async (
   return { keys: { privateKey, publicKey }, serialNumber, controller };
 };
 
-const ca = async (req: Request): Promise<FileResponse> => {
+const ca = async (req: Request, _timeout: number): Promise<FileResponse> => {
   const host = req.get('host') || 'localhost';
   const { keys, serialNumber, controller } = await keyPair(host);
 
@@ -127,9 +127,9 @@ const ca = async (req: Request): Promise<FileResponse> => {
   };
 };
 
-const cert = async (req: Request): Promise<FileResponse> => {
-  const name = await firstValueFrom(identity(req));
-  const { subject, controller, __keys } = await ca(req);
+const cert = async (req: Request, timeout: number): Promise<FileResponse> => {
+  const name = await firstValueFrom(identity(req, timeout));
+  const { subject, controller, __keys } = await ca(req, timeout);
   const { keys, serialNumber } = await keyPair(name, controller);
 
   const cert = await X509CertificateGenerator.create({
@@ -172,9 +172,9 @@ const cert = async (req: Request): Promise<FileResponse> => {
   };
 };
 
-const key = async (req: Request): Promise<FileResponse> => {
-  const name = await firstValueFrom(identity(req));
-  const { subject, controller } = await ca(req);
+const key = async (req: Request, timeout: number): Promise<FileResponse> => {
+  const name = await firstValueFrom(identity(req, timeout));
+  const { subject, controller } = await ca(req, timeout);
   const { keys } = await keyPair(name, controller);
 
   const pkcs8 = await subtle.exportKey('pkcs8', keys.privateKey);
@@ -189,9 +189,9 @@ const key = async (req: Request): Promise<FileResponse> => {
   };
 };
 
-const pub = async (req: Request): Promise<FileResponse> => {
-  const name = await firstValueFrom(identity(req));
-  const { subject, controller } = await ca(req);
+const pub = async (req: Request, timeout: number): Promise<FileResponse> => {
+  const name = await firstValueFrom(identity(req, timeout));
+  const { subject, controller } = await ca(req, timeout);
   const { keys } = await keyPair(name, controller);
 
   const spki = await subtle.exportKey('spki', keys.publicKey);
@@ -207,6 +207,7 @@ const pub = async (req: Request): Promise<FileResponse> => {
 };
 
 export const certRouter = (
+  timeout: number,
   req: Request,
   res: Response,
 ): Observable<Response> => {
@@ -223,7 +224,7 @@ export const certRouter = (
 
   const fn = paths[req.path as keyof typeof paths];
 
-  return from(fn(req)).pipe(
+  return from(fn(req, timeout)).pipe(
     map((file) => {
       return res
         .header('Content-Type', file.contentType)
