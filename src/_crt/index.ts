@@ -132,6 +132,15 @@ const cert = async (req: Request, timeout: number): Promise<FileResponse> => {
   const { subject, controller, __keys } = await ca(req, timeout);
   const { keys, serialNumber } = await keyPair(name, controller);
 
+  const sans: GeneralName[] = [
+    new GeneralName('dns', '*.sk8s.net'),
+    new GeneralName('dns', '*.us.sk8s.net'),
+    new GeneralName('dns', '*.etcd.sk8s.net'), // Temporary until serverless etcd
+    new GeneralName('dns', 'localhost'),
+    new GeneralName('dns', 'host.docker.internal'),
+    new GeneralName('ip', '127.0.0.1'),
+  ];
+
   const cert = await X509CertificateGenerator.create({
     serialNumber,
     subject: `CN=${name},O=system:masters`,
@@ -146,6 +155,7 @@ const cert = async (req: Request, timeout: number): Promise<FileResponse> => {
       new KeyUsagesExtension(
         KeyUsageFlags.digitalSignature |
           KeyUsageFlags.nonRepudiation |
+          KeyUsageFlags.keyEncipherment |
           KeyUsageFlags.keyAgreement,
         true,
       ),
@@ -153,11 +163,7 @@ const cert = async (req: Request, timeout: number): Promise<FileResponse> => {
         [ExtendedKeyUsage.clientAuth, ExtendedKeyUsage.serverAuth],
         true,
       ),
-      new SubjectAlternativeNameExtension([
-        new GeneralName('dns', 'localhost'),
-        new GeneralName('dns', 'host.docker.internal'),
-        new GeneralName('ip', '127.0.0.1'),
-      ]),
+      new SubjectAlternativeNameExtension(sans),
       await SubjectKeyIdentifierExtension.create(keys.publicKey),
       await AuthorityKeyIdentifierExtension.create(__keys.publicKey),
     ],
