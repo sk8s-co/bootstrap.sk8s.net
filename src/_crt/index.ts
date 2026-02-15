@@ -4,6 +4,7 @@ import {
   BasicConstraintsExtension,
   ExtendedKeyUsage,
   ExtendedKeyUsageExtension,
+  Extension,
   GeneralName,
   KeyUsageFlags,
   KeyUsagesExtension,
@@ -127,56 +128,71 @@ const ca = async (req: Request, _timeout: number): Promise<FileResponse> => {
   };
 };
 
-const cert = async (req: Request, timeout: number): Promise<FileResponse> => {
-  const name = await firstValueFrom(identity(req, timeout));
-  const { subject, controller, __keys } = await ca(req, timeout);
-  const { keys, serialNumber } = await keyPair(name, controller);
+const cert =
+  (server = true) =>
+  async (req: Request, timeout: number): Promise<FileResponse> => {
+    const name = await firstValueFrom(identity(req, timeout));
+    const { subject, controller, __keys } = await ca(req, timeout);
+    const { keys, serialNumber } = await keyPair(name, controller);
 
-  const sans: GeneralName[] = [
-    new GeneralName('dns', '*.sk8s.net'),
-    new GeneralName('dns', '*.us.sk8s.net'),
-    new GeneralName('dns', '*.etcd.sk8s.net'), // Temporary until serverless etcd
-    new GeneralName('dns', 'localhost'),
-    new GeneralName('dns', 'host.docker.internal'),
-    new GeneralName('ip', '127.0.0.1'),
-  ];
-
-  const cert = await X509CertificateGenerator.create({
-    serialNumber,
-    subject: `CN=${name},O=system:masters`,
-    issuer: subject,
-    notBefore,
-    notAfter,
-    signingAlgorithm: { name: 'ECDSA', hash: 'SHA-256' },
-    publicKey: keys.publicKey,
-    signingKey: __keys.privateKey,
-    extensions: [
-      new BasicConstraintsExtension(false, undefined, true), // CA: false
-      new KeyUsagesExtension(
-        KeyUsageFlags.digitalSignature |
-          KeyUsageFlags.nonRepudiation |
-          KeyUsageFlags.keyEncipherment |
-          KeyUsageFlags.keyAgreement,
-        true,
-      ),
-      new ExtendedKeyUsageExtension(
-        [ExtendedKeyUsage.clientAuth, ExtendedKeyUsage.serverAuth],
-        true,
-      ),
-      new SubjectAlternativeNameExtension(sans),
+    const extensions: Extension[] = [
+      new BasicConstraintsExtension(false, undefined, true),
       await SubjectKeyIdentifierExtension.create(keys.publicKey),
       await AuthorityKeyIdentifierExtension.create(__keys.publicKey),
-    ],
-  });
+    ];
 
-  return {
-    contentType: 'application/x-x509-user-cert',
-    data: cert.toString('pem'),
-    subject: cert.subject,
-    controller,
-    __keys: keys,
+    if (server) {
+      extensions.push(
+        new KeyUsagesExtension(
+          KeyUsageFlags.digitalSignature |
+            KeyUsageFlags.keyEncipherment |
+            KeyUsageFlags.keyAgreement,
+          true,
+        ),
+        new ExtendedKeyUsageExtension(
+          [ExtendedKeyUsage.clientAuth, ExtendedKeyUsage.serverAuth],
+          true,
+        ),
+        new SubjectAlternativeNameExtension([
+          new GeneralName('dns', '*.sk8s.net'),
+          new GeneralName('dns', '*.us.sk8s.net'),
+          new GeneralName('dns', '*.etcd.sk8s.net'), // Serverless etcd domain
+          new GeneralName('dns', '*.us.etcd.sk8s.net'), // Serverless etcd domain
+          new GeneralName('dns', 'localhost'),
+          new GeneralName('dns', 'host.docker.internal'),
+          new GeneralName('ip', '127.0.0.1'),
+        ]),
+      );
+    } else {
+      extensions.push(
+        new KeyUsagesExtension(
+          KeyUsageFlags.digitalSignature | KeyUsageFlags.nonRepudiation,
+          true,
+        ),
+        new ExtendedKeyUsageExtension([ExtendedKeyUsage.clientAuth], true),
+      );
+    }
+
+    const cert = await X509CertificateGenerator.create({
+      serialNumber,
+      subject: `CN=${name},O=system:masters`,
+      issuer: subject,
+      notBefore,
+      notAfter,
+      signingAlgorithm: { name: 'ECDSA', hash: 'SHA-256' },
+      publicKey: keys.publicKey,
+      signingKey: __keys.privateKey,
+      extensions,
+    });
+
+    return {
+      contentType: 'application/x-x509-user-cert',
+      data: cert.toString('pem'),
+      subject: cert.subject,
+      controller,
+      __keys: keys,
+    };
   };
-};
 
 const key = async (req: Request, timeout: number): Promise<FileResponse> => {
   const name = await firstValueFrom(identity(req, timeout));
@@ -219,7 +235,10 @@ export const certRouter = (
 ): Observable<Response> => {
   const paths = {
     '/ca.crt': ca,
-    '/client.crt': cert,
+    '/server.crt': cert(),
+    '/server.key': key,
+    '/server.pub': pub,
+    '/client.crt': cert(false),
     '/client.key': key,
     '/client.pub': pub,
   };
